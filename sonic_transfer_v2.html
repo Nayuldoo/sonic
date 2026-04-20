@@ -1,0 +1,1253 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SonicLink v2 — 음파 데이터 전송</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
+
+  :root {
+    --bg: #06090f;
+    --surface: #0d1320;
+    --surface2: #141d2f;
+    --border: #1b2840;
+    --accent: #00e5a0;
+    --accent2: #00b8d4;
+    --accent3: #a78bfa;
+    --accent-dim: rgba(0,229,160,0.12);
+    --accent2-dim: rgba(0,184,212,0.12);
+    --danger: #ff4d6a;
+    --warn: #f59e0b;
+    --text: #c9d1d9;
+    --text-dim: #4a5568;
+    --text-bright: #f0f4f8;
+    --mono: 'JetBrains Mono', monospace;
+    --sans: 'Noto Sans KR', sans-serif;
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background:
+      linear-gradient(rgba(0,229,160,0.02) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,229,160,0.02) 1px, transparent 1px);
+    background-size: 48px 48px;
+    pointer-events: none; z-index: 0;
+  }
+
+  .container {
+    position: relative; z-index: 1;
+    max-width: 940px;
+    margin: 0 auto;
+    padding: 20px 16px 50px;
+  }
+
+  /* ── Header ── */
+  .header { text-align: center; margin-bottom: 24px; }
+  .logo {
+    font-family: var(--mono); font-size: 30px; font-weight: 700;
+    background: linear-gradient(135deg, var(--accent), var(--accent2), var(--accent3));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    letter-spacing: -1px;
+  }
+  .logo-sub { font-size: 11px; color: var(--text-dim); margin-top: 2px; font-family: var(--mono); letter-spacing: 3px; }
+
+  /* ── Tabs ── */
+  .tab-bar { display: flex; gap: 0; margin-bottom: 20px; border-bottom: 1px solid var(--border); }
+  .tab {
+    flex: 1; padding: 12px 0; text-align: center;
+    font-family: var(--mono); font-size: 13px; font-weight: 500;
+    color: var(--text-dim); cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+  }
+  .tab:hover { color: var(--text); }
+  .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  /* ── Mode bar ── */
+  .mode-bar { display: flex; justify-content: center; gap: 8px; margin-bottom: 18px; flex-wrap: wrap; }
+  .mode-btn {
+    background: var(--surface); border: 1px solid var(--border);
+    color: var(--text-dim); font-family: var(--mono); font-size: 12px;
+    padding: 9px 18px; border-radius: 8px; cursor: pointer; transition: all 0.2s;
+  }
+  .mode-btn:hover { border-color: var(--accent); color: var(--text); }
+  .mode-btn.active {
+    background: var(--accent-dim); border-color: var(--accent);
+    color: var(--accent); box-shadow: 0 0 16px rgba(0,229,160,0.08);
+  }
+
+  /* ── Settings ── */
+  .settings-row { display: flex; gap: 10px; margin-bottom: 20px; justify-content: center; flex-wrap: wrap; }
+  .setting {
+    display: flex; align-items: center; gap: 6px;
+    font-family: var(--mono); font-size: 11px; color: var(--text-dim);
+    background: var(--surface); padding: 7px 12px; border-radius: 7px; border: 1px solid var(--border);
+  }
+  .setting select, .setting input[type=range] {
+    background: var(--bg); border: 1px solid var(--border); color: var(--text);
+    font-family: var(--mono); font-size: 11px; padding: 3px 6px; border-radius: 5px; outline: none;
+  }
+
+  /* ── Panels ── */
+  .panels { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 720px) { .panels { grid-template-columns: 1fr; } }
+
+  .panel {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 14px; padding: 20px; position: relative; overflow: hidden;
+  }
+  .panel::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent); opacity: 0.4;
+  }
+  .panel.rx::before { background: linear-gradient(90deg, transparent, var(--accent2), transparent); }
+
+  .panel-title {
+    font-family: var(--mono); font-size: 11px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 3px;
+    color: var(--accent); margin-bottom: 14px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .panel.rx .panel-title { color: var(--accent2); }
+
+  /* ── Input/Output ── */
+  .input-area {
+    width: 100%; min-height: 100px;
+    background: var(--bg); border: 1px solid var(--border); border-radius: 9px;
+    padding: 12px; color: var(--text-bright);
+    font-family: var(--mono); font-size: 12px; line-height: 1.6;
+    resize: vertical; outline: none; transition: border-color 0.2s;
+  }
+  .input-area:focus { border-color: var(--accent); }
+  .input-area::placeholder { color: var(--text-dim); }
+
+  .output-area {
+    width: 100%; min-height: 100px;
+    background: var(--bg); border: 1px solid var(--border); border-radius: 9px;
+    padding: 12px; color: var(--text-bright);
+    font-family: var(--mono); font-size: 12px; line-height: 1.6;
+    overflow-y: auto; word-break: break-all; transition: border-color 0.3s;
+  }
+
+  /* ── File drop zone ── */
+  .file-drop {
+    border: 2px dashed var(--border); border-radius: 10px;
+    padding: 28px 16px; text-align: center; cursor: pointer;
+    transition: all 0.25s; background: var(--bg);
+  }
+  .file-drop:hover, .file-drop.dragover {
+    border-color: var(--accent); background: var(--accent-dim);
+  }
+  .file-drop .icon { font-size: 28px; margin-bottom: 6px; }
+  .file-drop .label { font-family: var(--mono); font-size: 12px; color: var(--text-dim); }
+  .file-drop .sublabel { font-family: var(--mono); font-size: 10px; color: var(--text-dim); margin-top: 4px; opacity: 0.6; }
+  .file-info {
+    margin-top: 10px; padding: 10px 14px;
+    background: var(--surface2); border-radius: 8px; border: 1px solid var(--border);
+    font-family: var(--mono); font-size: 11px; color: var(--text); display: none;
+  }
+  .file-info .fname { color: var(--accent); font-weight: 600; }
+
+  /* ── Buttons ── */
+  .btn-row { display: flex; gap: 8px; margin-top: 12px; }
+  .btn {
+    flex: 1; padding: 11px 16px; border: none; border-radius: 9px;
+    font-family: var(--mono); font-size: 12px; font-weight: 600;
+    cursor: pointer; transition: all 0.2s;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+  }
+  .btn-tx { background: linear-gradient(135deg, var(--accent), #00c98a); color: var(--bg); }
+  .btn-tx:hover { box-shadow: 0 4px 18px rgba(0,229,160,0.3); transform: translateY(-1px); }
+  .btn-tx:disabled { opacity: 0.35; cursor: not-allowed; transform: none; box-shadow: none; }
+
+  .btn-rx { background: linear-gradient(135deg, var(--accent2), #0098b0); color: var(--bg); }
+  .btn-rx:hover { box-shadow: 0 4px 18px rgba(0,184,212,0.3); transform: translateY(-1px); }
+
+  .btn-stop { background: var(--danger); color: #fff; }
+  .btn-stop:hover { box-shadow: 0 4px 18px rgba(255,77,106,0.3); }
+
+  .btn-download {
+    background: var(--accent3); color: #fff; margin-top: 8px;
+    display: none;
+  }
+
+  /* ── Stats ── */
+  .stats { display: flex; gap: 12px; margin-top: 10px; flex-wrap: wrap; }
+  .stat { font-family: var(--mono); font-size: 10px; color: var(--text-dim); }
+  .stat b { color: var(--accent); font-weight: 500; }
+  .panel.rx .stat b { color: var(--accent2); }
+
+  /* ── Progress ── */
+  .progress-bar { height: 4px; background: var(--border); border-radius: 2px; margin-top: 10px; overflow: hidden; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent2)); border-radius: 2px; width: 0%; transition: width 0.12s; }
+
+  /* ── Status ── */
+  .status-line {
+    font-family: var(--mono); font-size: 10px; color: var(--text-dim);
+    margin-top: 8px; display: flex; align-items: center; gap: 6px; min-height: 16px;
+  }
+  .status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--text-dim); flex-shrink: 0; }
+  .status-dot.active { background: var(--accent); box-shadow: 0 0 8px var(--accent); animation: pulse 1s infinite; }
+  .status-dot.rx-active { background: var(--accent2); box-shadow: 0 0 8px var(--accent2); animation: pulse 1s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.35} }
+
+  /* ── Canvas ── */
+  .viz-container {
+    margin-top: 10px; height: 70px;
+    background: var(--bg); border-radius: 9px; border: 1px solid var(--border); overflow: hidden;
+  }
+  .viz-container canvas { width: 100%; height: 100%; }
+
+  /* ── Band indicator ── */
+  .band-map {
+    margin-top: 10px; padding: 10px 12px;
+    background: var(--bg); border-radius: 8px; border: 1px solid var(--border);
+  }
+  .band-map-title { font-family: var(--mono); font-size: 9px; color: var(--text-dim); letter-spacing: 2px; margin-bottom: 6px; text-transform: uppercase; }
+  .band-row { display: flex; gap: 3px; align-items: center; }
+  .band-block {
+    flex: 1; height: 14px; border-radius: 3px; position: relative;
+    font-family: var(--mono); font-size: 8px; color: rgba(255,255,255,0.7);
+    display: flex; align-items: center; justify-content: center;
+    transition: opacity 0.2s;
+  }
+
+  /* ── Mic permission overlay ── */
+  .mic-overlay {
+    display: none;
+    position: fixed; inset: 0; z-index: 100;
+    background: rgba(6,9,15,0.85); backdrop-filter: blur(8px);
+    align-items: center; justify-content: center;
+  }
+  .mic-overlay.show { display: flex; }
+  .mic-dialog {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 16px; padding: 32px; max-width: 380px; text-align: center;
+  }
+  .mic-dialog .mic-icon { font-size: 48px; margin-bottom: 12px; }
+  .mic-dialog h3 { font-family: var(--mono); font-size: 16px; color: var(--text-bright); margin-bottom: 8px; }
+  .mic-dialog p { font-size: 13px; color: var(--text-dim); line-height: 1.6; margin-bottom: 20px; }
+  .mic-dialog .mic-steps {
+    text-align: left; font-size: 12px; color: var(--text); line-height: 1.8;
+    background: var(--bg); border-radius: 8px; padding: 14px 18px; margin-bottom: 20px;
+    font-family: var(--mono);
+  }
+  .mic-btn-row { display: flex; gap: 10px; }
+  .mic-btn {
+    flex: 1; padding: 12px; border: none; border-radius: 10px;
+    font-family: var(--mono); font-size: 13px; font-weight: 600; cursor: pointer;
+  }
+  .mic-btn-allow { background: var(--accent2); color: var(--bg); }
+  .mic-btn-cancel { background: var(--surface2); color: var(--text-dim); border: 1px solid var(--border); }
+</style>
+</head>
+<body>
+
+<!-- Mic permission dialog -->
+<div class="mic-overlay" id="micOverlay">
+  <div class="mic-dialog">
+    <div class="mic-icon">🎙️</div>
+    <h3>마이크 권한 필요</h3>
+    <p>음파 수신을 위해 마이크 접근 권한이 필요합니다.</p>
+    <div class="mic-steps">
+      📱 <b>스마트폰</b><br>
+      &nbsp;&nbsp;→ 브라우저 팝업에서 "허용" 선택<br>
+      &nbsp;&nbsp;→ 팝업이 없으면: 설정 → 사이트 설정 → 마이크<br><br>
+      💻 <b>PC</b><br>
+      &nbsp;&nbsp;→ 주소창 옆 🔒 아이콘 → 마이크 허용
+    </div>
+    <div class="mic-btn-row">
+      <button class="mic-btn mic-btn-cancel" onclick="closeMicOverlay()">취소</button>
+      <button class="mic-btn mic-btn-allow" onclick="requestMicPermission()">권한 요청</button>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+  <div class="header">
+    <div class="logo">⟨ SonicLink v2 ⟩</div>
+    <div class="logo-sub">PARALLEL ACOUSTIC DATA TRANSFER</div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tab-bar">
+    <div class="tab active" onclick="switchTab('text')">📝 텍스트 전송</div>
+    <div class="tab" onclick="switchTab('file')">📁 파일 전송</div>
+  </div>
+
+  <!-- Mode -->
+  <div class="mode-bar">
+    <button class="mode-btn active" onclick="setMode('near-ultra')" title="일상 소음과 겹치지 않는 대역">🔇 준초음파 (15.5-19.5kHz)</button>
+    <button class="mode-btn" onclick="setMode('quiet-band')" title="생활소음 비간섭 대역">🔉 비간섭 가청 (5.5-8kHz)</button>
+  </div>
+
+  <!-- Settings -->
+  <div class="settings-row">
+    <div class="setting">
+      <span>병렬채널</span>
+      <select id="parallelSelect" onchange="updateConfig()">
+        <option value="1">1ch (안정)</option>
+        <option value="2">2ch</option>
+        <option value="4" selected>4ch (균형)</option>
+        <option value="8">8ch (최대)</option>
+      </select>
+    </div>
+    <div class="setting">
+      <span>심볼속도</span>
+      <select id="baudSelect" onchange="updateConfig()">
+        <option value="50">50 bd</option>
+        <option value="80" selected>80 bd</option>
+        <option value="120">120 bd</option>
+      </select>
+    </div>
+    <div class="setting">
+      <span>볼륨</span>
+      <input type="range" id="volSlider" min="0.05" max="1" step="0.05" value="0.6" oninput="updateConfig()">
+    </div>
+  </div>
+
+  <!-- Band Map -->
+  <div class="band-map">
+    <div class="band-map-title">frequency band allocation</div>
+    <div class="band-row" id="bandRow"></div>
+  </div>
+
+  <!-- ═══ TEXT TAB ═══ -->
+  <div class="tab-content active" id="tab-text">
+    <div class="panels" style="margin-top:16px">
+      <div class="panel tx">
+        <div class="panel-title">📡 TRANSMIT</div>
+        <textarea class="input-area" id="txInput" placeholder="전송할 텍스트를 입력하세요..."></textarea>
+        <div class="stats">
+          <div class="stat">원본 <b id="txOrigSize">0</b>B</div>
+          <div class="stat">압축 <b id="txCompSize">0</b>B</div>
+          <div class="stat">비율 <b id="txRatio">-</b></div>
+          <div class="stat">채널 <b id="txChInfo">4ch</b></div>
+          <div class="stat">예상 <b id="txTime">-</b></div>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-tx" id="txBtn" onclick="startTransmit()">▶ 전송</button>
+        </div>
+        <div class="progress-bar"><div class="progress-fill" id="txProgress"></div></div>
+        <div class="status-line"><span class="status-dot" id="txDot"></span><span id="txStatus">대기 중</span></div>
+        <div class="viz-container"><canvas id="txCanvas"></canvas></div>
+      </div>
+
+      <div class="panel rx">
+        <div class="panel-title">📻 RECEIVE</div>
+        <div class="output-area" id="rxOutput">—</div>
+        <div class="stats">
+          <div class="stat">수신 <b id="rxBytes">0</b>B</div>
+          <div class="stat">복원 <b id="rxDecomp">0</b>B</div>
+          <div class="stat">에러 <b id="rxErrors">0</b></div>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-rx" id="rxBtn" onclick="handleReceiveBtn()">● 수신 시작</button>
+        </div>
+        <div class="progress-bar"><div class="progress-fill" id="rxProgress"></div></div>
+        <div class="status-line"><span class="status-dot" id="rxDot"></span><span id="rxStatus">대기 중</span></div>
+        <div class="viz-container"><canvas id="rxCanvas"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ FILE TAB ═══ -->
+  <div class="tab-content" id="tab-file">
+    <div class="panels" style="margin-top:16px">
+      <div class="panel tx">
+        <div class="panel-title">📡 FILE TRANSMIT</div>
+        <div class="file-drop" id="fileDrop" onclick="document.getElementById('fileInput').click()">
+          <div class="icon">📎</div>
+          <div class="label">파일을 드래그하거나 클릭하여 선택</div>
+          <div class="sublabel">권장: 10KB 이하 (음파 전송 특성상)</div>
+        </div>
+        <input type="file" id="fileInput" style="display:none" onchange="handleFileSelect(event)">
+        <div class="file-info" id="fileInfo">
+          <span class="fname" id="fileName">-</span>
+          <span id="fileSize">0B</span>
+        </div>
+        <div class="stats">
+          <div class="stat">원본 <b id="ftxOrigSize">0</b>B</div>
+          <div class="stat">압축 <b id="ftxCompSize">0</b>B</div>
+          <div class="stat">예상 <b id="ftxTime">-</b></div>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-tx" id="ftxBtn" onclick="startFileTransmit()" disabled>▶ 파일 전송</button>
+        </div>
+        <div class="progress-bar"><div class="progress-fill" id="ftxProgress"></div></div>
+        <div class="status-line"><span class="status-dot" id="ftxDot"></span><span id="ftxStatus">파일을 선택하세요</span></div>
+        <div class="viz-container"><canvas id="ftxCanvas"></canvas></div>
+      </div>
+
+      <div class="panel rx">
+        <div class="panel-title">📻 FILE RECEIVE</div>
+        <div class="output-area" id="frxOutput">—</div>
+        <div class="stats">
+          <div class="stat">수신 <b id="frxBytes">0</b>B</div>
+          <div class="stat">복원 <b id="frxDecomp">0</b>B</div>
+          <div class="stat">에러 <b id="frxErrors">0</b></div>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-rx" id="frxBtn" onclick="handleFileReceiveBtn()">● 수신 시작</button>
+        </div>
+        <button class="btn btn-download" id="frxDownload" onclick="downloadReceivedFile()">💾 파일 다운로드</button>
+        <div class="progress-bar"><div class="progress-fill" id="frxProgress"></div></div>
+        <div class="status-line"><span class="status-dot" id="frxDot"></span><span id="frxStatus">대기 중</span></div>
+        <div class="viz-container"><canvas id="frxCanvas"></canvas></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════
+//  CONFIGURATION
+// ═══════════════════════════════════════════════════
+/*
+  주파수 설계 철학:
+  - 준초음파(15.5-19.5kHz): 대부분 성인은 16kHz 이상 청취 불가.
+    생활소음(에어컨, TV, 대화 등)은 대부분 8kHz 이하에 집중하므로 간섭 최소.
+  - 비간섭 가청대(5.5-8kHz): 사람 음성(85-1100Hz), TV/음악 주요대(~4kHz),
+    가전 소음(~3kHz) 과 겹치지 않는 높은 가청대역. 찌르르 소리가 들리지만
+    일상 소음의 간섭은 매우 적음.
+
+  병렬 전송(오케스트라 모드):
+  - 전체 대역을 N개 "서브밴드"로 분할
+  - 각 서브밴드가 독립적으로 16-FSK 변조 → 한 심볼 타임에 N×4bit 동시 전송
+  - 예: 4채널 × 80baud × 4bit = 1,280 bps 이론 속도
+*/
+
+const BANDS = {
+  'near-ultra': { start: 15500, end: 19500, label: '준초음파' },
+  'quiet-band': { start: 5500, end: 8000, label: '비간섭 가청' },
+};
+
+const TONES_PER_CH = 16; // 16-FSK per sub-band
+const GUARD_HZ = 30;     // guard band between tones
+const SAMPLE_RATE = 44100;
+const PREAMBLE_SYMBOLS = 12;
+
+let currentMode = 'near-ultra';
+let parallelCh = 4;
+let baudRate = 80;
+let volume = 0.6;
+
+// derived
+function calcBandAlloc() {
+  const band = BANDS[currentMode];
+  const totalBW = band.end - band.start;
+  const chBW = Math.floor(totalBW / parallelCh);
+  const toneStep = Math.floor((chBW - GUARD_HZ * 2) / TONES_PER_CH);
+  const channels = [];
+  for (let c = 0; c < parallelCh; c++) {
+    const chStart = band.start + c * chBW + GUARD_HZ;
+    const tones = [];
+    for (let t = 0; t < TONES_PER_CH; t++) {
+      tones.push(chStart + t * toneStep);
+    }
+    channels.push({ start: chStart, end: chStart + TONES_PER_CH * toneStep, tones, toneStep });
+  }
+  // preamble freqs: just below and above entire band
+  const preambleFreqs = [band.start - 80, band.end + 80];
+  return { channels, preambleFreqs, toneStep, chBW };
+}
+
+function updateConfig() {
+  parallelCh = parseInt(document.getElementById('parallelSelect').value);
+  baudRate = parseInt(document.getElementById('baudSelect').value);
+  volume = parseFloat(document.getElementById('volSlider').value);
+  document.getElementById('txChInfo').textContent = parallelCh + 'ch';
+  renderBandMap();
+  updateStats();
+}
+
+// ═══════════════════════════════════════════════════
+//  COMPRESSION (Deflate-lite: LZ77 + simple Huffman)
+// ═══════════════════════════════════════════════════
+function compress(input) {
+  if (!input || input.length === 0) return new Uint8Array(0);
+  const bytes = (input instanceof Uint8Array) ? input : new TextEncoder().encode(input);
+  const out = [];
+  let i = 0;
+  while (i < bytes.length) {
+    let bestLen = 0, bestDist = 0;
+    const maxDist = Math.min(i, 255);
+    const maxLen = Math.min(bytes.length - i, 31);
+    for (let d = 1; d <= maxDist; d++) {
+      let l = 0;
+      while (l < maxLen && bytes[i + l] === bytes[i - d + (l % d)]) l++;
+      if (l > bestLen && l >= 3) { bestLen = l; bestDist = d; }
+    }
+    if (bestLen >= 3) {
+      out.push(0xFF, bestDist, bestLen);
+      i += bestLen;
+    } else {
+      if (bytes[i] === 0xFF) out.push(0xFF, 0, 0);
+      else out.push(bytes[i]);
+      i++;
+    }
+  }
+  return new Uint8Array(out);
+}
+
+function decompress(data) {
+  if (!data || data.length === 0) return new Uint8Array(0);
+  const out = [];
+  let i = 0;
+  while (i < data.length) {
+    if (data[i] === 0xFF) {
+      i++;
+      if (i + 1 >= data.length) break;
+      const dist = data[i++];
+      const len = data[i++];
+      if (dist === 0 && len === 0) out.push(0xFF);
+      else { for (let j = 0; j < len; j++) out.push(out[out.length - dist]); }
+    } else {
+      out.push(data[i++]);
+    }
+  }
+  return new Uint8Array(out);
+}
+
+// ═══════════════════════════════════════════════════
+//  CRC16
+// ═══════════════════════════════════════════════════
+function crc16(data) {
+  let crc = 0xFFFF;
+  for (let i = 0; i < data.length; i++) {
+    crc ^= data[i];
+    for (let j = 0; j < 8; j++) crc = (crc & 1) ? ((crc >> 1) ^ 0xA001) : (crc >> 1);
+  }
+  return crc & 0xFFFF;
+}
+
+// ═══════════════════════════════════════════════════
+//  PACKET STRUCTURE
+// ═══════════════════════════════════════════════════
+/*
+  [TYPE 1B][NAME_LEN 1B][NAME 0-64B][DATA_LEN 3B][DATA ...][CRC16 2B]
+  TYPE: 0x01 = text, 0x02 = file
+*/
+function buildPacket(type, data, fileName) {
+  const nameBytes = fileName ? new TextEncoder().encode(fileName.slice(0, 64)) : new Uint8Array(0);
+  const header = new Uint8Array(5 + nameBytes.length);
+  header[0] = type;
+  header[1] = nameBytes.length;
+  header.set(nameBytes, 2);
+  const dlen = data.length;
+  header[2 + nameBytes.length] = (dlen >> 16) & 0xFF;
+  header[3 + nameBytes.length] = (dlen >> 8) & 0xFF;
+  header[4 + nameBytes.length] = dlen & 0xFF;
+  const packet = new Uint8Array(header.length + data.length + 2);
+  packet.set(header, 0);
+  packet.set(data, header.length);
+  const crc = crc16(packet.subarray(0, header.length + data.length));
+  packet[packet.length - 2] = (crc >> 8) & 0xFF;
+  packet[packet.length - 1] = crc & 0xFF;
+  return packet;
+}
+
+function parsePacket(bytes) {
+  if (bytes.length < 7) return null;
+  const type = bytes[0];
+  const nameLen = bytes[1];
+  const name = nameLen > 0 ? new TextDecoder().decode(bytes.slice(2, 2 + nameLen)) : '';
+  const dLenOff = 2 + nameLen;
+  const dataLen = (bytes[dLenOff] << 16) | (bytes[dLenOff + 1] << 8) | bytes[dLenOff + 2];
+  const dataStart = dLenOff + 3;
+  const data = bytes.slice(dataStart, dataStart + dataLen);
+  const crcHi = bytes[dataStart + dataLen];
+  const crcLo = bytes[dataStart + dataLen + 1];
+  const rxCrc = (crcHi << 8) | crcLo;
+  const calcCrc = crc16(bytes.slice(0, dataStart + dataLen));
+  return { type, name, data: new Uint8Array(data), crcOk: rxCrc === calcCrc };
+}
+
+// ═══════════════════════════════════════════════════
+//  AUDIO CONTEXT
+// ═══════════════════════════════════════════════════
+let audioCtx = null;
+function ensureAudioCtx() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: SAMPLE_RATE });
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  return audioCtx;
+}
+
+// ═══════════════════════════════════════════════════
+//  PARALLEL TRANSMIT ENGINE
+// ═══════════════════════════════════════════════════
+let isTxBusy = false;
+
+async function transmitPacket(packetBytes, progressCb, statusCb, canvasId) {
+  if (isTxBusy) return;
+  isTxBusy = true;
+  const ctx = ensureAudioCtx();
+
+  const alloc = calcBandAlloc();
+  const symbolDur = 1 / baudRate;
+  const samplesPerSym = Math.floor(symbolDur * SAMPLE_RATE);
+  const ramp = Math.min(Math.floor(samplesPerSym * 0.06), 24);
+
+  // Convert bytes to nibbles
+  const nibbles = [];
+  for (const b of packetBytes) {
+    nibbles.push((b >> 4) & 0x0F);
+    nibbles.push(b & 0x0F);
+  }
+
+  // Split nibbles across parallel channels (interleaved)
+  const chNibbles = Array.from({ length: parallelCh }, () => []);
+  for (let i = 0; i < nibbles.length; i++) {
+    chNibbles[i % parallelCh].push(nibbles[i]);
+  }
+  const maxSymbols = Math.max(...chNibbles.map(c => c.length));
+  const totalSymbols = PREAMBLE_SYMBOLS + maxSymbols + 2; // +2 postamble
+  const totalSamples = totalSymbols * samplesPerSym;
+
+  const buffer = ctx.createBuffer(1, totalSamples, SAMPLE_RATE);
+  const ch = buffer.getChannelData(0);
+
+  function addTone(freq, symStart, amp) {
+    const off = symStart * samplesPerSym;
+    for (let s = 0; s < samplesPerSym; s++) {
+      let a = amp;
+      if (s < ramp) a *= (1 - Math.cos(Math.PI * s / ramp)) / 2;
+      else if (s > samplesPerSym - ramp) a *= (1 - Math.cos(Math.PI * (samplesPerSym - s) / ramp)) / 2;
+      ch[off + s] += a * Math.sin(2 * Math.PI * freq * (off + s) / SAMPLE_RATE);
+    }
+  }
+
+  const toneAmp = (volume * 0.25) / Math.sqrt(parallelCh);
+
+  // Preamble: all channels emit alternating sync tones
+  statusCb('프리앰블 생성 중...');
+  for (let sym = 0; sym < PREAMBLE_SYMBOLS; sym++) {
+    for (let c = 0; c < parallelCh; c++) {
+      const freq = alloc.channels[c].tones[sym % 2 === 0 ? 0 : TONES_PER_CH - 1];
+      addTone(freq, sym, toneAmp);
+    }
+  }
+
+  // Data: parallel nibbles → each channel plays its tone
+  statusCb('오디오 버퍼 생성 중...');
+  for (let sym = 0; sym < maxSymbols; sym++) {
+    for (let c = 0; c < parallelCh; c++) {
+      if (sym < chNibbles[c].length) {
+        const nibVal = chNibbles[c][sym];
+        addTone(alloc.channels[c].tones[nibVal], PREAMBLE_SYMBOLS + sym, toneAmp);
+      }
+    }
+  }
+
+  // Postamble
+  for (let sym = 0; sym < 2; sym++) {
+    for (let c = 0; c < parallelCh; c++) {
+      addTone(alloc.channels[c].tones[TONES_PER_CH - 1 - (sym % 2)], PREAMBLE_SYMBOLS + maxSymbols + sym, toneAmp);
+    }
+  }
+
+  // Play
+  const source = ctx.createBufferSource();
+  source.buffer = buffer;
+  source.connect(ctx.destination);
+  source.start();
+
+  const startTime = ctx.currentTime;
+  const totalDuration = totalSymbols * symbolDur;
+
+  // Animate
+  const canvas = document.getElementById(canvasId);
+  const c2d = canvas.getContext('2d');
+  canvas.width = canvas.offsetWidth * 2;
+  canvas.height = canvas.offsetHeight * 2;
+
+  function animate() {
+    const elapsed = ctx.currentTime - startTime;
+    const pct = Math.min(elapsed / totalDuration, 1);
+    progressCb(pct);
+    statusCb(`전송 중... ${(pct * 100).toFixed(0)}% (${parallelCh}ch 병렬)`);
+
+    // Waveform
+    const w = canvas.width, h = canvas.height;
+    c2d.fillStyle = '#06090f';
+    c2d.fillRect(0, 0, w, h);
+    const curSample = Math.floor(elapsed * SAMPLE_RATE);
+    const winSize = samplesPerSym * 4;
+    c2d.lineWidth = 2;
+
+    // Draw multiple colored bands
+    const colors = ['#00e5a0', '#00b8d4', '#a78bfa', '#f59e0b'];
+    c2d.globalAlpha = 0.8;
+    c2d.strokeStyle = colors[0];
+    c2d.beginPath();
+    for (let x = 0; x < w; x++) {
+      const si = curSample - winSize / 2 + Math.floor(x * winSize / w);
+      const val = (si >= 0 && si < ch.length) ? ch[si] : 0;
+      const y = h / 2 - val * h * 1.5;
+      x === 0 ? c2d.moveTo(x, y) : c2d.lineTo(x, y);
+    }
+    c2d.stroke();
+    // Glow
+    c2d.strokeStyle = 'rgba(0,229,160,0.15)';
+    c2d.lineWidth = 8;
+    c2d.stroke();
+    c2d.globalAlpha = 1;
+
+    if (pct < 1) requestAnimationFrame(animate);
+  }
+  requestAnimationFrame(animate);
+
+  return new Promise(resolve => {
+    source.onended = () => {
+      progressCb(1);
+      statusCb('전송 완료 ✓');
+      isTxBusy = false;
+      resolve();
+    };
+  });
+}
+
+// ═══════════════════════════════════════════════════
+//  PARALLEL RECEIVE ENGINE
+// ═══════════════════════════════════════════════════
+let rxState = null; // shared state for active receiver
+
+async function startReceiveEngine(opts) {
+  const ctx = ensureAudioCtx();
+  const stream = await navigator.mediaDevices.getUserMedia({
+    audio: { sampleRate: SAMPLE_RATE, echoCancellation: false, noiseSuppression: false, autoGainControl: false }
+  });
+
+  const source = ctx.createMediaStreamSource(stream);
+  const analyser = ctx.createAnalyser();
+  analyser.fftSize = 8192;
+  analyser.smoothingTimeConstant = 0.25;
+  source.connect(analyser);
+
+  const fftData = new Float32Array(analyser.frequencyBinCount);
+  const binHz = SAMPLE_RATE / analyser.fftSize;
+  const alloc = calcBandAlloc();
+  const symbolDur = 1000 / baudRate;
+
+  let state = 'SYNC';
+  let syncHits = 0;
+  let nibbles = [];
+  let symTimer = 0;
+  let lastTime = performance.now();
+  let errorCount = 0;
+  let packetLen = -1;
+
+  // Waterfall canvas
+  const canvas = document.getElementById(opts.canvasId);
+  const c2d = canvas.getContext('2d');
+  canvas.width = canvas.offsetWidth * 2;
+  canvas.height = canvas.offsetHeight * 2;
+
+  const noiseFloor = currentMode === 'near-ultra' ? -55 : -45;
+
+  function detectChannelNibble(chIdx) {
+    const ch = alloc.channels[chIdx];
+    let maxPow = -Infinity, maxTone = -1;
+    for (let t = 0; t < TONES_PER_CH; t++) {
+      const bin = Math.round(ch.tones[t] / binHz);
+      let pow = -Infinity;
+      for (let b = bin - 2; b <= bin + 2; b++) {
+        if (b >= 0 && b < fftData.length && fftData[b] > pow) pow = fftData[b];
+      }
+      if (pow > maxPow) { maxPow = pow; maxTone = t; }
+    }
+    return maxPow > noiseFloor ? maxTone : -1;
+  }
+
+  function processSymbol() {
+    analyser.getFloatFrequencyData(fftData);
+
+    if (state === 'SYNC') {
+      // Check if all channels have strong signal at tone 0 or tone 15
+      let hits = 0;
+      for (let c = 0; c < parallelCh; c++) {
+        const det = detectChannelNibble(c);
+        if (det === 0 || det === TONES_PER_CH - 1) hits++;
+      }
+      if (hits >= Math.ceil(parallelCh * 0.6)) {
+        syncHits++;
+        if (syncHits >= 8) {
+          state = 'DATA';
+          nibbles = [];
+          packetLen = -1;
+          opts.onStatus('데이터 수신 중...');
+        }
+      } else {
+        syncHits = Math.max(0, syncHits - 1);
+      }
+    } else if (state === 'DATA') {
+      // Read one nibble from each channel
+      const symNibbles = [];
+      for (let c = 0; c < parallelCh; c++) {
+        const det = detectChannelNibble(c);
+        symNibbles.push(det >= 0 ? det : 0);
+        if (det < 0) errorCount++;
+      }
+      // De-interleave: these are nibbles[nibbleIdx % parallelCh] for consecutive nibbleIdx
+      for (const n of symNibbles) nibbles.push(n);
+
+      // Parse packet length from header
+      // TYPE(1B=2nib) + NAME_LEN(1B=2nib) + at least DATA_LEN(3B=6nib) = 10 nibbles min header
+      if (packetLen < 0 && nibbles.length >= 10) {
+        const hdrBytes = [];
+        for (let i = 0; i < nibbles.length - 1; i += 2) {
+          hdrBytes.push((nibbles[i] << 4) | nibbles[i + 1]);
+        }
+        const nameLen = hdrBytes[1];
+        if (nameLen <= 64 && hdrBytes.length > 2 + nameLen + 3) {
+          const dOff = 2 + nameLen;
+          const dataLen = (hdrBytes[dOff] << 16) | (hdrBytes[dOff + 1] << 8) | hdrBytes[dOff + 2];
+          packetLen = (1 + 1 + nameLen + 3 + dataLen + 2); // total bytes
+        }
+      }
+
+      const bytesRx = Math.floor(nibbles.length / 2);
+      opts.onProgress(packetLen > 0 ? Math.min(bytesRx / packetLen, 1) : 0);
+      opts.onBytes(bytesRx);
+      opts.onErrors(errorCount);
+      opts.onStatus(`수신 중... ${bytesRx}${packetLen > 0 ? '/' + packetLen : ''} B (${parallelCh}ch)`);
+
+      if (packetLen > 0 && bytesRx >= packetLen) {
+        // Reconstruct
+        const bytes = [];
+        for (let i = 0; i < packetLen * 2 && i < nibbles.length - 1; i += 2) {
+          bytes.push((nibbles[i] << 4) | nibbles[i + 1]);
+        }
+        const pkt = parsePacket(bytes);
+        state = 'DONE';
+        opts.onComplete(pkt);
+        // Reset for next packet
+        setTimeout(() => {
+          state = 'SYNC'; syncHits = 0; nibbles = []; packetLen = -1; errorCount = 0;
+          opts.onStatus('다음 패킷 대기 중...');
+        }, 2500);
+      }
+    }
+  }
+
+  // Waterfall + loop
+  const bandInfo = BANDS[currentMode];
+  const fftStartBin = Math.round((bandInfo.start - 500) / binHz);
+  const fftEndBin = Math.round((bandInfo.end + 500) / binHz);
+  const binRange = fftEndBin - fftStartBin;
+  const chColors = [[0, 229, 160], [0, 184, 212], [167, 139, 250], [245, 158, 11]];
+
+  function loop() {
+    if (!rxState || rxState.id !== opts.id) return;
+
+    const now = performance.now();
+    symTimer += now - lastTime;
+    lastTime = now;
+    if (symTimer >= symbolDur) { symTimer -= symbolDur; processSymbol(); }
+
+    // Waterfall
+    analyser.getFloatFrequencyData(fftData);
+    const w = canvas.width, h = canvas.height;
+    const img = c2d.getImageData(2, 0, w - 2, h);
+    c2d.putImageData(img, 0, 0);
+
+    for (let y = 0; y < h; y++) {
+      const bin = fftStartBin + Math.floor((1 - y / h) * binRange);
+      if (bin >= 0 && bin < fftData.length) {
+        const val = Math.max(0, Math.min(1, (fftData[bin] + 70) / 50));
+        // Color by channel
+        const freq = bin * binHz;
+        let col = chColors[0];
+        for (let c = 0; c < parallelCh && c < chColors.length; c++) {
+          const ach = alloc.channels[c];
+          if (freq >= ach.start - 50 && freq <= ach.end + 50) { col = chColors[c]; break; }
+        }
+        c2d.fillStyle = `rgb(${Math.floor(val * col[0])},${Math.floor(val * col[1])},${Math.floor(val * col[2])})`;
+        c2d.fillRect(w - 2, y, 2, 1);
+      }
+    }
+
+    requestAnimationFrame(loop);
+  }
+
+  rxState = {
+    id: opts.id,
+    stream,
+    stop() {
+      this.id = null;
+      stream.getTracks().forEach(t => t.stop());
+    }
+  };
+
+  lastTime = performance.now();
+  requestAnimationFrame(loop);
+  return rxState;
+}
+
+// ═══════════════════════════════════════════════════
+//  UI: TABS
+// ═══════════════════════════════════════════════════
+function switchTab(tab) {
+  document.querySelectorAll('.tab').forEach((t, i) => t.classList.toggle('active', (i === 0 && tab === 'text') || (i === 1 && tab === 'file')));
+  document.getElementById('tab-text').classList.toggle('active', tab === 'text');
+  document.getElementById('tab-file').classList.toggle('active', tab === 'file');
+}
+
+function setMode(mode) {
+  currentMode = mode;
+  document.querySelectorAll('.mode-btn').forEach((b, i) => {
+    b.classList.toggle('active', (i === 0 && mode === 'near-ultra') || (i === 1 && mode === 'quiet-band'));
+  });
+  renderBandMap();
+  updateStats();
+}
+
+// ═══════════════════════════════════════════════════
+//  UI: BAND MAP
+// ═══════════════════════════════════════════════════
+function renderBandMap() {
+  const alloc = calcBandAlloc();
+  const row = document.getElementById('bandRow');
+  const colors = ['#00e5a0', '#00b8d4', '#a78bfa', '#f59e0b', '#ef4444', '#ec4899', '#6366f1', '#14b8a6'];
+  row.innerHTML = '';
+  for (let c = 0; c < parallelCh; c++) {
+    const ch = alloc.channels[c];
+    const block = document.createElement('div');
+    block.className = 'band-block';
+    block.style.background = colors[c % colors.length] + '33';
+    block.style.border = '1px solid ' + colors[c % colors.length] + '55';
+    block.textContent = `CH${c + 1} ${(ch.start / 1000).toFixed(1)}k`;
+    row.appendChild(block);
+  }
+}
+
+// ═══════════════════════════════════════════════════
+//  UI: STATS
+// ═══════════════════════════════════════════════════
+function updateStats() {
+  const text = document.getElementById('txInput').value;
+  const orig = new TextEncoder().encode(text).length;
+  const comp = compress(text);
+  const pkt = orig > 0 ? buildPacket(0x01, comp, '') : new Uint8Array(0);
+  const totalNibbles = pkt.length * 2;
+  const symbolsPerRound = parallelCh;
+  const dataSymbols = Math.ceil(totalNibbles / symbolsPerRound);
+  const totalSymbols = PREAMBLE_SYMBOLS + dataSymbols + 2;
+  const duration = totalSymbols / baudRate;
+  const bps = orig > 0 ? Math.round(orig * 8 / duration) : 0;
+
+  document.getElementById('txOrigSize').textContent = orig;
+  document.getElementById('txCompSize').textContent = comp.length;
+  document.getElementById('txRatio').textContent = orig > 0 ? ((1 - comp.length / orig) * 100).toFixed(1) + '%' : '-';
+  document.getElementById('txTime').textContent = orig > 0 ? duration.toFixed(1) + 's (~' + bps + 'bps)' : '-';
+  document.getElementById('txChInfo').textContent = parallelCh + 'ch';
+}
+document.getElementById('txInput').addEventListener('input', updateStats);
+
+// ═══════════════════════════════════════════════════
+//  UI: MIC PERMISSION
+// ═══════════════════════════════════════════════════
+let micResolve = null;
+
+function showMicOverlay() {
+  document.getElementById('micOverlay').classList.add('show');
+  return new Promise(resolve => { micResolve = resolve; });
+}
+function closeMicOverlay() {
+  document.getElementById('micOverlay').classList.remove('show');
+  if (micResolve) { micResolve(false); micResolve = null; }
+}
+async function requestMicPermission() {
+  document.getElementById('micOverlay').classList.remove('show');
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({
+      audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false }
+    });
+    stream.getTracks().forEach(t => t.stop()); // release immediately
+    if (micResolve) { micResolve(true); micResolve = null; }
+  } catch (e) {
+    alert('마이크 권한이 거부되었습니다.\n\n브라우저 설정에서 이 사이트의 마이크 권한을 허용해 주세요.');
+    if (micResolve) { micResolve(false); micResolve = null; }
+  }
+}
+
+async function ensureMicPermission() {
+  // Check current permission
+  try {
+    const result = await navigator.permissions.query({ name: 'microphone' });
+    if (result.state === 'granted') return true;
+  } catch (e) { /* permissions API not supported, proceed */ }
+  // Show our dialog first
+  return await showMicOverlay();
+}
+
+// ═══════════════════════════════════════════════════
+//  TEXT: TRANSMIT
+// ═══════════════════════════════════════════════════
+async function startTransmit() {
+  const text = document.getElementById('txInput').value;
+  if (!text || isTxBusy) return;
+
+  const btn = document.getElementById('txBtn');
+  const dot = document.getElementById('txDot');
+  btn.disabled = true; btn.textContent = '■ 전송 중...';
+  dot.classList.add('active');
+
+  const compressed = compress(text);
+  const packet = buildPacket(0x01, compressed, '');
+
+  await transmitPacket(packet,
+    pct => document.getElementById('txProgress').style.width = (pct * 100) + '%',
+    msg => document.getElementById('txStatus').textContent = msg,
+    'txCanvas'
+  );
+
+  btn.disabled = false; btn.textContent = '▶ 전송';
+  dot.classList.remove('active');
+}
+
+// ═══════════════════════════════════════════════════
+//  TEXT: RECEIVE
+// ═══════════════════════════════════════════════════
+let textRxActive = false;
+
+async function handleReceiveBtn() {
+  if (textRxActive) {
+    stopTextReceive();
+    return;
+  }
+  const allowed = await ensureMicPermission();
+  if (!allowed) return;
+  startTextReceive();
+}
+
+async function startTextReceive() {
+  textRxActive = true;
+  const btn = document.getElementById('rxBtn');
+  const dot = document.getElementById('rxDot');
+  btn.textContent = '■ 수신 중지';
+  btn.className = 'btn btn-stop';
+  dot.classList.add('rx-active');
+  document.getElementById('rxStatus').textContent = '수신 대기 중 — 프리앰블 감지 대기...';
+  document.getElementById('rxOutput').textContent = '수신 대기 중...';
+
+  try {
+    await startReceiveEngine({
+      id: 'text-rx',
+      canvasId: 'rxCanvas',
+      onStatus: msg => document.getElementById('rxStatus').textContent = msg,
+      onProgress: pct => document.getElementById('rxProgress').style.width = (pct * 100) + '%',
+      onBytes: b => document.getElementById('rxBytes').textContent = b,
+      onErrors: e => document.getElementById('rxErrors').textContent = e,
+      onComplete: pkt => {
+        if (pkt && pkt.crcOk) {
+          const decoded = new TextDecoder().decode(decompress(pkt.data));
+          document.getElementById('rxOutput').textContent = decoded;
+          document.getElementById('rxOutput').style.borderColor = 'var(--accent)';
+          document.getElementById('rxDecomp').textContent = new TextEncoder().encode(decoded).length;
+          document.getElementById('rxStatus').textContent = '수신 완료 ✓ (CRC OK)';
+        } else if (pkt) {
+          try {
+            const decoded = new TextDecoder().decode(decompress(pkt.data));
+            document.getElementById('rxOutput').textContent = decoded + '\n\n⚠ CRC 불일치';
+          } catch { document.getElementById('rxOutput').textContent = '⚠ 디코딩 실패'; }
+          document.getElementById('rxOutput').style.borderColor = 'var(--danger)';
+        }
+      }
+    });
+  } catch (e) {
+    document.getElementById('rxStatus').textContent = '마이크 접근 실패: ' + e.message;
+    stopTextReceive();
+  }
+}
+
+function stopTextReceive() {
+  textRxActive = false;
+  if (rxState && rxState.id === 'text-rx') rxState.stop();
+  const btn = document.getElementById('rxBtn');
+  btn.textContent = '● 수신 시작';
+  btn.className = 'btn btn-rx';
+  document.getElementById('rxDot').classList.remove('rx-active');
+  document.getElementById('rxStatus').textContent = '대기 중';
+}
+
+// ═══════════════════════════════════════════════════
+//  FILE: SELECT
+// ═══════════════════════════════════════════════════
+let selectedFileData = null;
+let selectedFileName = '';
+
+function handleFileSelect(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  selectedFileName = file.name;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    selectedFileData = new Uint8Array(ev.target.result);
+    document.getElementById('fileInfo').style.display = 'block';
+    document.getElementById('fileName').textContent = file.name;
+    document.getElementById('fileSize').textContent = ' — ' + formatSize(selectedFileData.length);
+    document.getElementById('ftxBtn').disabled = false;
+
+    const comp = compress(selectedFileData);
+    const pkt = buildPacket(0x02, comp, file.name);
+    const nibbles = pkt.length * 2;
+    const dataSyms = Math.ceil(nibbles / parallelCh);
+    const totalSyms = PREAMBLE_SYMBOLS + dataSyms + 2;
+    const dur = totalSyms / baudRate;
+
+    document.getElementById('ftxOrigSize').textContent = formatSize(selectedFileData.length);
+    document.getElementById('ftxCompSize').textContent = formatSize(comp.length);
+    document.getElementById('ftxTime').textContent = dur.toFixed(1) + 's';
+    document.getElementById('ftxStatus').textContent = '전송 준비 완료';
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function formatSize(bytes) {
+  if (bytes < 1024) return bytes + 'B';
+  if (bytes < 1048576) return (bytes / 1024).toFixed(1) + 'KB';
+  return (bytes / 1048576).toFixed(2) + 'MB';
+}
+
+// Drag & drop
+const dropZone = document.getElementById('fileDrop');
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('dragover'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault(); dropZone.classList.remove('dragover');
+  const file = e.dataTransfer.files[0];
+  if (file) {
+    const dt = new DataTransfer(); dt.items.add(file);
+    document.getElementById('fileInput').files = dt.files;
+    handleFileSelect({ target: { files: [file] } });
+  }
+});
+
+// ═══════════════════════════════════════════════════
+//  FILE: TRANSMIT
+// ═══════════════════════════════════════════════════
+async function startFileTransmit() {
+  if (!selectedFileData || isTxBusy) return;
+
+  const btn = document.getElementById('ftxBtn');
+  const dot = document.getElementById('ftxDot');
+  btn.disabled = true; btn.textContent = '■ 전송 중...';
+  dot.classList.add('active');
+
+  const compressed = compress(selectedFileData);
+  const packet = buildPacket(0x02, compressed, selectedFileName);
+
+  await transmitPacket(packet,
+    pct => document.getElementById('ftxProgress').style.width = (pct * 100) + '%',
+    msg => document.getElementById('ftxStatus').textContent = msg,
+    'ftxCanvas'
+  );
+
+  btn.disabled = false; btn.textContent = '▶ 파일 전송';
+  dot.classList.remove('active');
+}
+
+// ═══════════════════════════════════════════════════
+//  FILE: RECEIVE
+// ═══════════════════════════════════════════════════
+let fileRxActive = false;
+let receivedFileBlob = null;
+let receivedFileName = '';
+
+async function handleFileReceiveBtn() {
+  if (fileRxActive) {
+    stopFileReceive();
+    return;
+  }
+  const allowed = await ensureMicPermission();
+  if (!allowed) return;
+  startFileReceive();
+}
+
+async function startFileReceive() {
+  fileRxActive = true;
+  const btn = document.getElementById('frxBtn');
+  btn.textContent = '■ 수신 중지';
+  btn.className = 'btn btn-stop';
+  document.getElementById('frxDot').classList.add('rx-active');
+  document.getElementById('frxStatus').textContent = '수신 대기 중 — 프리앰블 감지 대기...';
+  document.getElementById('frxOutput').textContent = '수신 대기 중...';
+  document.getElementById('frxDownload').style.display = 'none';
+
+  try {
+    await startReceiveEngine({
+      id: 'file-rx',
+      canvasId: 'frxCanvas',
+      onStatus: msg => document.getElementById('frxStatus').textContent = msg,
+      onProgress: pct => document.getElementById('frxProgress').style.width = (pct * 100) + '%',
+      onBytes: b => document.getElementById('frxBytes').textContent = b,
+      onErrors: e => document.getElementById('frxErrors').textContent = e,
+      onComplete: pkt => {
+        if (pkt && pkt.type === 0x02) {
+          const fileData = decompress(pkt.data);
+          receivedFileBlob = new Blob([fileData]);
+          receivedFileName = pkt.name || 'received_file';
+          document.getElementById('frxDecomp').textContent = formatSize(fileData.length);
+          document.getElementById('frxOutput').textContent = pkt.crcOk
+            ? `✅ 파일 수신 완료\n파일명: ${receivedFileName}\n크기: ${formatSize(fileData.length)}\nCRC: OK`
+            : `⚠ 파일 수신 (CRC 오류)\n파일명: ${receivedFileName}\n크기: ${formatSize(fileData.length)}`;
+          document.getElementById('frxOutput').style.borderColor = pkt.crcOk ? 'var(--accent)' : 'var(--danger)';
+          document.getElementById('frxDownload').style.display = 'flex';
+          document.getElementById('frxStatus').textContent = '수신 완료 — 다운로드 가능';
+        } else if (pkt && pkt.type === 0x01) {
+          // Got text in file mode
+          const text = new TextDecoder().decode(decompress(pkt.data));
+          document.getElementById('frxOutput').textContent = '(텍스트 패킷 수신)\n' + text;
+          document.getElementById('frxOutput').style.borderColor = 'var(--accent2)';
+        }
+      }
+    });
+  } catch (e) {
+    document.getElementById('frxStatus').textContent = '마이크 접근 실패: ' + e.message;
+    stopFileReceive();
+  }
+}
+
+function stopFileReceive() {
+  fileRxActive = false;
+  if (rxState && rxState.id === 'file-rx') rxState.stop();
+  const btn = document.getElementById('frxBtn');
+  btn.textContent = '● 수신 시작';
+  btn.className = 'btn btn-rx';
+  document.getElementById('frxDot').classList.remove('rx-active');
+  document.getElementById('frxStatus').textContent = '대기 중';
+}
+
+function downloadReceivedFile() {
+  if (!receivedFileBlob) return;
+  const url = URL.createObjectURL(receivedFileBlob);
+  const a = document.createElement('a');
+  a.href = url; a.download = receivedFileName;
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+// ═══════════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════════
+renderBandMap();
+updateStats();
+</script>
+</body>
+</html>
