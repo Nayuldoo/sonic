@@ -1,0 +1,1304 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SonicLink v3 — 음파 데이터 전송</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
+
+  :root {
+    --bg: #06090f;
+    --surface: #0d1320;
+    --surface2: #141d2f;
+    --border: #1b2840;
+    --accent: #00e5a0;
+    --accent2: #00b8d4;
+    --accent3: #a78bfa;
+    --accent-dim: rgba(0,229,160,0.12);
+    --danger: #ff4d6a;
+    --warn: #f59e0b;
+    --text: #c9d1d9;
+    --text-dim: #4a5568;
+    --text-bright: #f0f4f8;
+    --mono: 'JetBrains Mono', monospace;
+    --sans: 'Noto Sans KR', sans-serif;
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    background: var(--bg); color: var(--text);
+    font-family: var(--sans); min-height: 100vh; overflow-x: hidden;
+  }
+  body::before {
+    content:''; position:fixed; inset:0;
+    background: linear-gradient(rgba(0,229,160,0.015) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0,229,160,0.015) 1px, transparent 1px);
+    background-size: 48px 48px; pointer-events:none; z-index:0;
+  }
+
+  .container { position:relative; z-index:1; max-width:960px; margin:0 auto; padding:20px 16px 50px; }
+
+  .header { text-align:center; margin-bottom:20px; }
+  .logo {
+    font-family:var(--mono); font-size:28px; font-weight:700;
+    background: linear-gradient(135deg, var(--accent), var(--accent2), var(--accent3));
+    -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+  }
+  .logo-sub { font-size:10px; color:var(--text-dim); font-family:var(--mono); letter-spacing:3px; margin-top:2px; }
+
+  /* Tabs */
+  .tab-bar { display:flex; gap:0; margin-bottom:16px; border-bottom:1px solid var(--border); }
+  .tab {
+    flex:1; padding:11px 0; text-align:center;
+    font-family:var(--mono); font-size:12px; font-weight:500;
+    color:var(--text-dim); cursor:pointer; border-bottom:2px solid transparent; transition:all .2s;
+  }
+  .tab:hover { color:var(--text); }
+  .tab.active { color:var(--accent); border-bottom-color:var(--accent); }
+  .tab-content { display:none; }
+  .tab-content.active { display:block; }
+
+  /* Config bar */
+  .config-bar {
+    background:var(--surface); border:1px solid var(--border); border-radius:12px;
+    padding:14px 18px; margin-bottom:16px;
+  }
+  .config-row { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+  .config-group {
+    display:flex; align-items:center; gap:6px;
+    font-family:var(--mono); font-size:11px; color:var(--text-dim);
+  }
+  .config-group select {
+    background:var(--bg); border:1px solid var(--border); color:var(--text);
+    font-family:var(--mono); font-size:11px; padding:5px 8px; border-radius:6px; outline:none;
+  }
+  .config-group select:focus { border-color:var(--accent); }
+  .config-group input[type=range] {
+    width:70px; accent-color:var(--accent);
+  }
+  .config-note {
+    font-family:var(--mono); font-size:10px; color:var(--warn);
+    margin-top:8px; padding:6px 10px;
+    background:rgba(245,158,11,0.08); border:1px solid rgba(245,158,11,0.2);
+    border-radius:6px; line-height:1.5;
+  }
+
+  /* Band map */
+  .band-map {
+    margin-top:10px; padding:8px 0 0;
+    border-top:1px solid var(--border);
+  }
+  .band-map-title { font-family:var(--mono); font-size:9px; color:var(--text-dim); letter-spacing:2px; margin-bottom:5px; }
+  .band-row { display:flex; gap:3px; }
+  .band-block {
+    flex:1; height:16px; border-radius:3px;
+    font-family:var(--mono); font-size:8px; color:rgba(255,255,255,0.7);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .config-id {
+    font-family:var(--mono); font-size:10px; color:var(--accent3);
+    margin-top:6px; letter-spacing:1px;
+  }
+
+  /* Panels */
+  .panels { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  @media (max-width:720px) { .panels { grid-template-columns:1fr; } }
+
+  .panel {
+    background:var(--surface); border:1px solid var(--border);
+    border-radius:14px; padding:18px; position:relative; overflow:hidden;
+  }
+  .panel::before {
+    content:''; position:absolute; top:0; left:0; right:0; height:2px;
+    background:linear-gradient(90deg,transparent,var(--accent),transparent); opacity:.4;
+  }
+  .panel.rx::before { background:linear-gradient(90deg,transparent,var(--accent2),transparent); }
+
+  .panel-title {
+    font-family:var(--mono); font-size:11px; font-weight:600;
+    text-transform:uppercase; letter-spacing:3px;
+    color:var(--accent); margin-bottom:12px;
+  }
+  .panel.rx .panel-title { color:var(--accent2); }
+
+  .input-area {
+    width:100%; min-height:90px;
+    background:var(--bg); border:1px solid var(--border); border-radius:8px;
+    padding:10px; color:var(--text-bright);
+    font-family:var(--mono); font-size:12px; line-height:1.5;
+    resize:vertical; outline:none; transition:border-color .2s;
+  }
+  .input-area:focus { border-color:var(--accent); }
+  .input-area::placeholder { color:var(--text-dim); }
+
+  .output-area {
+    width:100%; min-height:90px;
+    background:var(--bg); border:1px solid var(--border); border-radius:8px;
+    padding:10px; color:var(--text-bright);
+    font-family:var(--mono); font-size:12px; line-height:1.5;
+    overflow-y:auto; word-break:break-all; white-space:pre-wrap;
+    transition:border-color .3s;
+  }
+
+  /* File drop */
+  .file-drop {
+    border:2px dashed var(--border); border-radius:10px;
+    padding:24px 14px; text-align:center; cursor:pointer;
+    transition:all .25s; background:var(--bg);
+  }
+  .file-drop:hover,.file-drop.dragover { border-color:var(--accent); background:var(--accent-dim); }
+  .file-drop .icon { font-size:26px; margin-bottom:4px; }
+  .file-drop .label { font-family:var(--mono); font-size:11px; color:var(--text-dim); }
+  .file-drop .sublabel { font-family:var(--mono); font-size:9px; color:var(--text-dim); margin-top:3px; opacity:.6; }
+  .file-info {
+    margin-top:8px; padding:8px 12px;
+    background:var(--surface2); border-radius:7px; border:1px solid var(--border);
+    font-family:var(--mono); font-size:11px; color:var(--text); display:none;
+  }
+  .file-info .fname { color:var(--accent); font-weight:600; }
+
+  /* Buttons */
+  .btn-row { display:flex; gap:8px; margin-top:10px; }
+  .btn {
+    flex:1; padding:10px 14px; border:none; border-radius:8px;
+    font-family:var(--mono); font-size:12px; font-weight:600;
+    cursor:pointer; transition:all .2s;
+    display:flex; align-items:center; justify-content:center; gap:5px;
+  }
+  .btn-tx { background:linear-gradient(135deg,var(--accent),#00c98a); color:var(--bg); }
+  .btn-tx:hover { box-shadow:0 3px 16px rgba(0,229,160,.3); transform:translateY(-1px); }
+  .btn-tx:disabled { opacity:.3; cursor:not-allowed; transform:none; box-shadow:none; }
+  .btn-rx { background:linear-gradient(135deg,var(--accent2),#0098b0); color:var(--bg); }
+  .btn-rx:hover { box-shadow:0 3px 16px rgba(0,184,212,.3); transform:translateY(-1px); }
+  .btn-stop { background:var(--danger); color:#fff; }
+  .btn-stop:hover { box-shadow:0 3px 16px rgba(255,77,106,.3); }
+  .btn-download { background:var(--accent3); color:#fff; margin-top:6px; display:none; }
+
+  /* Stats */
+  .stats { display:flex; gap:10px; margin-top:8px; flex-wrap:wrap; }
+  .stat { font-family:var(--mono); font-size:10px; color:var(--text-dim); }
+  .stat b { color:var(--accent); font-weight:500; }
+  .panel.rx .stat b { color:var(--accent2); }
+
+  .progress-bar { height:3px; background:var(--border); border-radius:2px; margin-top:8px; overflow:hidden; }
+  .progress-fill { height:100%; background:linear-gradient(90deg,var(--accent),var(--accent2)); border-radius:2px; width:0%; transition:width .1s; }
+
+  .status-line {
+    font-family:var(--mono); font-size:10px; color:var(--text-dim);
+    margin-top:6px; display:flex; align-items:center; gap:5px; min-height:14px;
+  }
+  .status-dot { width:6px; height:6px; border-radius:50%; background:var(--text-dim); flex-shrink:0; transition:all .3s; }
+  .status-dot.active { background:var(--accent); box-shadow:0 0 8px var(--accent); animation:pulse 1s infinite; }
+  .status-dot.rx-active { background:var(--accent2); box-shadow:0 0 8px var(--accent2); animation:pulse 1s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.35} }
+
+  .viz-container {
+    margin-top:8px; height:64px;
+    background:var(--bg); border-radius:8px; border:1px solid var(--border); overflow:hidden;
+  }
+  .viz-container canvas { width:100%; height:100%; display:block; }
+
+  /* Mic overlay */
+  .mic-overlay {
+    display:none; position:fixed; inset:0; z-index:100;
+    background:rgba(6,9,15,.88); backdrop-filter:blur(8px);
+    align-items:center; justify-content:center;
+  }
+  .mic-overlay.show { display:flex; }
+  .mic-dialog {
+    background:var(--surface); border:1px solid var(--border);
+    border-radius:16px; padding:28px; max-width:370px; text-align:center;
+  }
+  .mic-dialog .mic-icon { font-size:44px; margin-bottom:10px; }
+  .mic-dialog h3 { font-family:var(--mono); font-size:15px; color:var(--text-bright); margin-bottom:6px; }
+  .mic-dialog p { font-size:12px; color:var(--text-dim); line-height:1.6; margin-bottom:16px; }
+  .mic-dialog .mic-steps {
+    text-align:left; font-size:11px; color:var(--text); line-height:1.8;
+    background:var(--bg); border-radius:8px; padding:12px 16px; margin-bottom:16px;
+    font-family:var(--mono);
+  }
+  .mic-btn-row { display:flex; gap:8px; }
+  .mic-btn {
+    flex:1; padding:11px; border:none; border-radius:9px;
+    font-family:var(--mono); font-size:12px; font-weight:600; cursor:pointer;
+  }
+  .mic-btn-allow { background:var(--accent2); color:var(--bg); }
+  .mic-btn-cancel { background:var(--surface2); color:var(--text-dim); border:1px solid var(--border); }
+
+  /* Debug log */
+  .debug-toggle {
+    font-family:var(--mono); font-size:10px; color:var(--text-dim);
+    cursor:pointer; margin-top:12px; text-align:center;
+  }
+  .debug-log {
+    display:none; margin-top:8px; padding:10px;
+    background:var(--bg); border:1px solid var(--border); border-radius:8px;
+    font-family:var(--mono); font-size:9px; color:var(--text-dim);
+    max-height:150px; overflow-y:auto; line-height:1.6;
+  }
+  .debug-log.show { display:block; }
+</style>
+</head>
+<body>
+
+<!-- Mic dialog -->
+<div class="mic-overlay" id="micOverlay">
+  <div class="mic-dialog">
+    <div class="mic-icon">🎙️</div>
+    <h3>마이크 권한 필요</h3>
+    <p>음파 수신을 위해 마이크 접근 권한이 필요합니다.</p>
+    <div class="mic-steps">
+      📱 <b>모바일</b>: 팝업에서 "허용" 선택<br>
+      &nbsp;&nbsp;팝업 없으면 → 설정 → 사이트 → 마이크<br>
+      💻 <b>PC</b>: 주소창 🔒 → 마이크 허용
+    </div>
+    <div class="mic-btn-row">
+      <button class="mic-btn mic-btn-cancel" onclick="closeMicOverlay()">취소</button>
+      <button class="mic-btn mic-btn-allow" onclick="doRequestMic()">권한 요청</button>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+  <div class="header">
+    <div class="logo">⟨ SonicLink v3 ⟩</div>
+    <div class="logo-sub">PARALLEL ACOUSTIC MODEM</div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tab-bar">
+    <div class="tab active" onclick="switchTab('text')">📝 텍스트</div>
+    <div class="tab" onclick="switchTab('file')">📁 파일</div>
+  </div>
+
+  <!-- Config -->
+  <div class="config-bar">
+    <div class="config-row">
+      <div class="config-group">
+        <span>대역</span>
+        <select id="modeSelect" onchange="onConfigChange()">
+          <option value="near-ultra">준초음파 15.5-19.5kHz</option>
+          <option value="quiet-mid">비간섭 5.5-8kHz</option>
+        </select>
+      </div>
+      <div class="config-group">
+        <span>채널</span>
+        <select id="chSelect" onchange="onConfigChange()">
+          <option value="1">1ch</option>
+          <option value="2" selected>2ch</option>
+          <option value="4">4ch</option>
+        </select>
+      </div>
+      <div class="config-group">
+        <span>속도</span>
+        <select id="baudSelect" onchange="onConfigChange()">
+          <option value="40">40 bd (안정)</option>
+          <option value="60" selected>60 bd</option>
+          <option value="80">80 bd (빠름)</option>
+        </select>
+      </div>
+      <div class="config-group">
+        <span>볼륨</span>
+        <input type="range" id="volSlider" min="0.1" max="1" step="0.05" value="0.7" oninput="onConfigChange()">
+      </div>
+    </div>
+    <div class="config-note">
+      ⚠ 송신·수신 양쪽의 대역, 채널, 속도 설정이 반드시 동일해야 합니다
+    </div>
+    <div class="band-map">
+      <div class="band-map-title">BAND ALLOCATION</div>
+      <div class="band-row" id="bandRow"></div>
+    </div>
+    <div class="config-id" id="configId"></div>
+  </div>
+
+  <!-- TEXT TAB -->
+  <div class="tab-content active" id="tab-text">
+    <div class="panels" style="margin-top:12px">
+      <div class="panel tx">
+        <div class="panel-title">📡 TRANSMIT</div>
+        <textarea class="input-area" id="txInput" placeholder="전송할 텍스트를 입력하세요..."></textarea>
+        <div class="stats">
+          <div class="stat">원본 <b id="txOrig">0</b>B</div>
+          <div class="stat">압축 <b id="txComp">0</b>B</div>
+          <div class="stat">예상 <b id="txEst">-</b></div>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-tx" id="txBtn" onclick="doTextTx()">▶ 전송</button>
+        </div>
+        <div class="progress-bar"><div class="progress-fill" id="txProg"></div></div>
+        <div class="status-line"><span class="status-dot" id="txDot"></span><span id="txStat">대기 중</span></div>
+        <div class="viz-container"><canvas id="txViz"></canvas></div>
+      </div>
+      <div class="panel rx">
+        <div class="panel-title">📻 RECEIVE</div>
+        <div class="output-area" id="rxOut">—</div>
+        <div class="stats">
+          <div class="stat">수신 <b id="rxBytes">0</b>B</div>
+          <div class="stat">복원 <b id="rxDecomp">0</b>B</div>
+          <div class="stat">에러 <b id="rxErr">0</b></div>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-rx" id="rxBtn" onclick="toggleTextRx()">● 수신 시작</button>
+        </div>
+        <div class="progress-bar"><div class="progress-fill" id="rxProg"></div></div>
+        <div class="status-line"><span class="status-dot" id="rxDot"></span><span id="rxStat">대기 중</span></div>
+        <div class="viz-container"><canvas id="rxViz"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FILE TAB -->
+  <div class="tab-content" id="tab-file">
+    <div class="panels" style="margin-top:12px">
+      <div class="panel tx">
+        <div class="panel-title">📡 FILE TX</div>
+        <div class="file-drop" id="fileDrop" onclick="document.getElementById('fileIn').click()">
+          <div class="icon">📎</div>
+          <div class="label">파일 선택 또는 드래그</div>
+          <div class="sublabel">권장 10KB 이하</div>
+        </div>
+        <input type="file" id="fileIn" style="display:none" onchange="onFileSelected(event)">
+        <div class="file-info" id="fileInfo"><span class="fname" id="fName"></span> <span id="fSize"></span></div>
+        <div class="stats">
+          <div class="stat">원본 <b id="ftxOrig">0</b></div>
+          <div class="stat">압축 <b id="ftxComp">0</b></div>
+          <div class="stat">예상 <b id="ftxEst">-</b></div>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-tx" id="ftxBtn" onclick="doFileTx()" disabled>▶ 파일 전송</button>
+        </div>
+        <div class="progress-bar"><div class="progress-fill" id="ftxProg"></div></div>
+        <div class="status-line"><span class="status-dot" id="ftxDot"></span><span id="ftxStat">파일을 선택하세요</span></div>
+        <div class="viz-container"><canvas id="ftxViz"></canvas></div>
+      </div>
+      <div class="panel rx">
+        <div class="panel-title">📻 FILE RX</div>
+        <div class="output-area" id="frxOut">—</div>
+        <div class="stats">
+          <div class="stat">수신 <b id="frxBytes">0</b>B</div>
+          <div class="stat">복원 <b id="frxDecomp">0</b>B</div>
+          <div class="stat">에러 <b id="frxErr">0</b></div>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-rx" id="frxBtn" onclick="toggleFileRx()">● 수신 시작</button>
+        </div>
+        <button class="btn btn-download" id="frxDL" onclick="dlFile()">💾 파일 다운로드</button>
+        <div class="progress-bar"><div class="progress-fill" id="frxProg"></div></div>
+        <div class="status-line"><span class="status-dot" id="frxDot"></span><span id="frxStat">대기 중</span></div>
+        <div class="viz-container"><canvas id="frxViz"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="debug-toggle" onclick="document.getElementById('dbgLog').classList.toggle('show')">▼ 디버그 로그</div>
+  <div class="debug-log" id="dbgLog"></div>
+</div>
+
+<script>
+// ═══════════════════════════════════════
+// GLOBALS
+// ═══════════════════════════════════════
+const SAMPLE_RATE = 48000;
+const TONES = 8;          // 8-FSK = 3 bits per symbol per channel
+const PREAMBLE_LEN = 16;  // preamble symbols
+const MIN_TONE_GAP = 120; // minimum Hz between adjacent tones
+
+const BANDS = {
+  'near-ultra': { lo: 15500, hi: 19500, label: '준초음파' },
+  'quiet-mid':  { lo: 5500,  hi: 8000,  label: '비간섭 가청' },
+};
+
+let CFG = { mode: 'near-ultra', nCh: 2, baud: 60, vol: 0.7 };
+let audioCtx = null;
+let txBusy = false;
+
+function dbg(msg) {
+  const el = document.getElementById('dbgLog');
+  const t = new Date().toLocaleTimeString('ko',{hour12:false});
+  el.innerHTML += `<div>[${t}] ${msg}</div>`;
+  el.scrollTop = el.scrollHeight;
+}
+
+// ═══════════════════════════════════════
+// FREQ ALLOCATION
+// ═══════════════════════════════════════
+function allocBands() {
+  const band = BANDS[CFG.mode];
+  const totalBW = band.hi - band.lo;
+  const chBW = Math.floor(totalBW / CFG.nCh);
+  const toneStep = Math.max(MIN_TONE_GAP, Math.floor((chBW - 60) / TONES));
+  const channels = [];
+  for (let c = 0; c < CFG.nCh; c++) {
+    const base = band.lo + c * chBW + 30; // 30Hz guard from edge
+    const tones = [];
+    for (let t = 0; t < TONES; t++) tones.push(base + t * toneStep);
+    channels.push({ base, tones, toneStep, hi: base + TONES * toneStep });
+  }
+  return { channels, toneStep };
+}
+
+// ═══════════════════════════════════════
+// CONFIG UI
+// ═══════════════════════════════════════
+function onConfigChange() {
+  CFG.mode = document.getElementById('modeSelect').value;
+  CFG.nCh  = parseInt(document.getElementById('chSelect').value);
+  CFG.baud = parseInt(document.getElementById('baudSelect').value);
+  CFG.vol  = parseFloat(document.getElementById('volSlider').value);
+
+  // Validate: check if toneStep would be too small
+  const band = BANDS[CFG.mode];
+  const chBW = (band.hi - band.lo) / CFG.nCh;
+  if (chBW / TONES < MIN_TONE_GAP) {
+    // Reduce channels
+    while (CFG.nCh > 1 && (band.hi - band.lo) / CFG.nCh / TONES < MIN_TONE_GAP) CFG.nCh--;
+    document.getElementById('chSelect').value = CFG.nCh;
+  }
+
+  renderBandMap();
+  updateTxStats();
+}
+
+function renderBandMap() {
+  const alloc = allocBands();
+  const colors = ['#00e5a0','#00b8d4','#a78bfa','#f59e0b'];
+  const row = document.getElementById('bandRow');
+  row.innerHTML = '';
+  for (let c = 0; c < CFG.nCh; c++) {
+    const ch = alloc.channels[c];
+    const div = document.createElement('div');
+    div.className = 'band-block';
+    div.style.background = colors[c % 4] + '30';
+    div.style.border = '1px solid ' + colors[c % 4] + '55';
+    div.textContent = `CH${c+1} ${(ch.base/1000).toFixed(1)}-${(ch.hi/1000).toFixed(1)}k`;
+    row.appendChild(div);
+  }
+  // Config hash for easy matching
+  const hash = `${CFG.mode.slice(0,2).toUpperCase()}-${CFG.nCh}CH-${CFG.baud}BD`;
+  document.getElementById('configId').textContent = `설정코드: ${hash} (양쪽 동일하게 맞추세요)`;
+}
+
+// ═══════════════════════════════════════
+// TABS
+// ═══════════════════════════════════════
+function switchTab(t) {
+  document.querySelectorAll('.tab').forEach((el,i) => el.classList.toggle('active', (i===0&&t==='text')||(i===1&&t==='file')));
+  document.getElementById('tab-text').classList.toggle('active', t==='text');
+  document.getElementById('tab-file').classList.toggle('active', t==='file');
+}
+
+// ═══════════════════════════════════════
+// COMPRESSION (LZ77)
+// ═══════════════════════════════════════
+function compress(input) {
+  const bytes = (input instanceof Uint8Array) ? input : new TextEncoder().encode(input);
+  if (!bytes.length) return new Uint8Array(0);
+  const out = [];
+  let i = 0;
+  while (i < bytes.length) {
+    let bLen = 0, bDist = 0;
+    const mxD = Math.min(i, 255), mxL = Math.min(bytes.length - i, 31);
+    for (let d = 1; d <= mxD; d++) {
+      let l = 0;
+      while (l < mxL && bytes[i+l] === bytes[i - d + (l % d)]) l++;
+      if (l > bLen && l >= 3) { bLen = l; bDist = d; }
+    }
+    if (bLen >= 3) { out.push(0xFF, bDist, bLen); i += bLen; }
+    else { if (bytes[i]===0xFF) out.push(0xFF,0,0); else out.push(bytes[i]); i++; }
+  }
+  return new Uint8Array(out);
+}
+
+function decompress(data) {
+  if (!data || !data.length) return new Uint8Array(0);
+  const out = [];
+  let i = 0;
+  while (i < data.length) {
+    if (data[i]===0xFF) {
+      i++; if(i+1>=data.length) break;
+      const d=data[i++], l=data[i++];
+      if(d===0&&l===0) out.push(0xFF);
+      else for(let j=0;j<l;j++) out.push(out[out.length-d]);
+    } else { out.push(data[i++]); }
+  }
+  return new Uint8Array(out);
+}
+
+// ═══════════════════════════════════════
+// CRC16
+// ═══════════════════════════════════════
+function crc16(data) {
+  let c = 0xFFFF;
+  for (let i = 0; i < data.length; i++) {
+    c ^= data[i];
+    for (let j = 0; j < 8; j++) c = (c&1) ? ((c>>1)^0xA001) : (c>>1);
+  }
+  return c & 0xFFFF;
+}
+
+// ═══════════════════════════════════════
+// PACKET: [TYPE 1][NAMELEN 1][NAME 0-64][DATALEN 3][DATA...][CRC16 2]
+// ═══════════════════════════════════════
+function buildPacket(type, compData, name) {
+  const nb = name ? new TextEncoder().encode(name.slice(0,64)) : new Uint8Array(0);
+  const hdrLen = 1 + 1 + nb.length + 3;
+  const pkt = new Uint8Array(hdrLen + compData.length + 2);
+  pkt[0] = type;
+  pkt[1] = nb.length;
+  pkt.set(nb, 2);
+  const dl = compData.length;
+  pkt[2+nb.length]   = (dl>>16)&0xFF;
+  pkt[3+nb.length]   = (dl>>8)&0xFF;
+  pkt[4+nb.length]   = dl&0xFF;
+  pkt.set(compData, hdrLen);
+  const crc = crc16(pkt.subarray(0, hdrLen + compData.length));
+  pkt[pkt.length-2] = (crc>>8)&0xFF;
+  pkt[pkt.length-1] = crc&0xFF;
+  return pkt;
+}
+
+function parsePacket(bytes) {
+  if (bytes.length < 7) return null;
+  const type = bytes[0], nLen = bytes[1];
+  const name = nLen > 0 ? new TextDecoder().decode(new Uint8Array(bytes.slice(2,2+nLen))) : '';
+  const dOff = 2 + nLen;
+  const dataLen = (bytes[dOff]<<16)|(bytes[dOff+1]<<8)|bytes[dOff+2];
+  const dStart = dOff + 3;
+  const data = bytes.slice(dStart, dStart + dataLen);
+  const rxCrc = (bytes[dStart+dataLen]<<8)|bytes[dStart+dataLen+1];
+  const calc = crc16(new Uint8Array(bytes.slice(0, dStart+dataLen)));
+  return { type, name, data: new Uint8Array(data), crcOk: rxCrc===calc };
+}
+
+// ═══════════════════════════════════════
+// AUDIO CTX
+// ═══════════════════════════════════════
+function getAudioCtx() {
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext||window.webkitAudioContext)({ sampleRate: SAMPLE_RATE });
+    dbg(`AudioContext created, sampleRate=${audioCtx.sampleRate}`);
+    if (audioCtx.sampleRate < 44100) {
+      dbg(`⚠ 실제 샘플레이트 ${audioCtx.sampleRate}Hz — 초음파 모드 제한될 수 있음`);
+    }
+  }
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  return audioCtx;
+}
+
+// ═══════════════════════════════════════
+// TX ENGINE (Parallel multi-tone)
+// ═══════════════════════════════════════
+async function transmitBytes(pktBytes, ui) {
+  if (txBusy) return;
+  txBusy = true;
+  const ctx = getAudioCtx();
+  const actualSR = ctx.sampleRate;
+  const alloc = allocBands();
+
+  // Bytes → nibbles (3-bit groups for 8-FSK)
+  // Pack bits: each byte = 8 bits, each symbol = 3 bits → need to pack carefully
+  // Simpler: use octal-ish encoding. Each byte → high nibble (3 bits) + mid (3 bits) + low (2 bits)?
+  // Actually simplest: split each byte into 3-bit symbols with padding
+  const bits = [];
+  for (const b of pktBytes) {
+    for (let i = 7; i >= 0; i--) bits.push((b >> i) & 1);
+  }
+  // Pad to multiple of 3
+  while (bits.length % 3 !== 0) bits.push(0);
+  const symbols = [];
+  for (let i = 0; i < bits.length; i += 3) {
+    symbols.push((bits[i]<<2)|(bits[i+1]<<1)|bits[i+2]);
+  }
+
+  // Distribute symbols round-robin across channels
+  const chSyms = Array.from({length:CFG.nCh}, ()=>[]);
+  for (let i = 0; i < symbols.length; i++) chSyms[i % CFG.nCh].push(symbols[i]);
+  const maxSyms = Math.max(...chSyms.map(c=>c.length));
+
+  const symDur = 1 / CFG.baud;
+  const sampPerSym = Math.round(symDur * actualSR);
+  const ramp = Math.min(Math.floor(sampPerSym * 0.08), 30);
+  const totalSyms = PREAMBLE_LEN + maxSyms + 4; // +4 postamble
+  const totalSamp = totalSyms * sampPerSym;
+
+  const buf = ctx.createBuffer(1, totalSamp, actualSR);
+  const data = buf.getChannelData(0);
+  const amp = (CFG.vol * 0.3) / Math.sqrt(CFG.nCh);
+
+  function writeTone(freq, symIdx) {
+    const off = symIdx * sampPerSym;
+    for (let s = 0; s < sampPerSym; s++) {
+      let a = amp;
+      if (s < ramp) a *= (1 - Math.cos(Math.PI*s/ramp))/2;
+      else if (s > sampPerSym-ramp) a *= (1 - Math.cos(Math.PI*(sampPerSym-s)/ramp))/2;
+      if (off+s < data.length) data[off+s] += a * Math.sin(2*Math.PI*freq*(off+s)/actualSR);
+    }
+  }
+
+  // Preamble: alternating first/last tone on all channels
+  ui.status('프리앰블 생성...');
+  for (let s = 0; s < PREAMBLE_LEN; s++) {
+    for (let c = 0; c < CFG.nCh; c++) {
+      writeTone(alloc.channels[c].tones[s%2===0 ? 0 : TONES-1], s);
+    }
+  }
+
+  // Data
+  ui.status('데이터 인코딩...');
+  for (let s = 0; s < maxSyms; s++) {
+    for (let c = 0; c < CFG.nCh; c++) {
+      const val = s < chSyms[c].length ? chSyms[c][s] : 0;
+      writeTone(alloc.channels[c].tones[val], PREAMBLE_LEN + s);
+    }
+  }
+
+  // Postamble: all channels tone 0
+  for (let s = 0; s < 4; s++) {
+    for (let c = 0; c < CFG.nCh; c++) {
+      writeTone(alloc.channels[c].tones[0], PREAMBLE_LEN + maxSyms + s);
+    }
+  }
+
+  dbg(`TX: ${pktBytes.length}B → ${symbols.length}syms, ${maxSyms}syms/ch, ${(totalSyms*symDur).toFixed(2)}s`);
+
+  // Play
+  const src = ctx.createBufferSource();
+  src.buffer = buf;
+  src.connect(ctx.destination);
+  src.start();
+
+  const t0 = ctx.currentTime;
+  const dur = totalSyms * symDur;
+
+  // Waveform visualization
+  const canvas = document.getElementById(ui.canvasId);
+  const c2d = canvas.getContext('2d');
+  canvas.width = canvas.offsetWidth * 2;
+  canvas.height = canvas.offsetHeight * 2;
+
+  function anim() {
+    const el = ctx.currentTime - t0;
+    const pct = Math.min(el/dur, 1);
+    ui.progress(pct);
+    ui.status(`전송 중 ${(pct*100)|0}% [${CFG.nCh}ch 병렬]`);
+
+    const w = canvas.width, h = canvas.height;
+    c2d.fillStyle = '#06090f';
+    c2d.fillRect(0,0,w,h);
+    const cs = Math.floor(el * actualSR);
+    const win = sampPerSym * 5;
+    c2d.strokeStyle = '#00e5a0';
+    c2d.lineWidth = 1.5;
+    c2d.beginPath();
+    for (let x = 0; x < w; x++) {
+      const si = cs - win/2 + Math.floor(x*win/w);
+      const v = (si>=0 && si<data.length) ? data[si] : 0;
+      const y = h/2 - v*h*1.5;
+      x===0 ? c2d.moveTo(x,y) : c2d.lineTo(x,y);
+    }
+    c2d.stroke();
+    c2d.strokeStyle = 'rgba(0,229,160,0.12)'; c2d.lineWidth = 6; c2d.stroke();
+
+    if (pct < 1) requestAnimationFrame(anim);
+  }
+  requestAnimationFrame(anim);
+
+  return new Promise(res => {
+    src.onended = () => {
+      ui.progress(1);
+      ui.status('전송 완료 ✓');
+      txBusy = false;
+      res();
+    };
+  });
+}
+
+// ═══════════════════════════════════════
+// RX ENGINE (Goertzel-based detection)
+// ═══════════════════════════════════════
+/*
+  Goertzel algorithm: efficiently computes DFT magnitude at specific frequencies.
+  Much more accurate than reading FFT bins for known target frequencies.
+  We run Goertzel on each symbol-length block of audio for each target frequency.
+*/
+
+class Receiver {
+  constructor(ui) {
+    this.ui = ui;
+    this.active = false;
+    this.stream = null;
+    this.processor = null;
+    this.animId = null;
+  }
+
+  async start() {
+    const ctx = getAudioCtx();
+    const actualSR = ctx.sampleRate;
+
+    try {
+      this.stream = await navigator.mediaDevices.getUserMedia({
+        audio: { sampleRate: SAMPLE_RATE, echoCancellation: false, noiseSuppression: false, autoGainControl: false }
+      });
+    } catch(e) {
+      this.ui.status('마이크 접근 실패: ' + e.message);
+      throw e;
+    }
+
+    this.active = true;
+    const source = ctx.createMediaStreamSource(this.stream);
+
+    // Use ScriptProcessorNode for precise per-sample access
+    const sampPerSym = Math.round(actualSR / CFG.baud);
+    // Buffer size: power of 2 closest to sampPerSym
+    const bufSize = Math.pow(2, Math.ceil(Math.log2(sampPerSym)));
+
+    this.processor = ctx.createScriptProcessor(bufSize, 1, 1);
+    const alloc = allocBands();
+
+    // State
+    let state = 'SYNC';
+    let syncScore = 0;
+    let sampleBuf = new Float32Array(sampPerSym);
+    let sampleIdx = 0;
+    let symbols = [];
+    let totalBitsExpected = -1;
+    let packetLen = -1;
+    let errorCount = 0;
+    let symbolCount = 0;
+    let postambleCount = 0;
+
+    // For waterfall
+    const analyser = ctx.createAnalyser();
+    analyser.fftSize = 4096;
+    analyser.smoothingTimeConstant = 0.2;
+    source.connect(analyser);
+
+    // Goertzel for a specific frequency over a buffer
+    function goertzelMag(buf, freq, sr) {
+      const N = buf.length;
+      const k = Math.round(freq * N / sr);
+      const w = 2 * Math.PI * k / N;
+      const coeff = 2 * Math.cos(w);
+      let s1 = 0, s2 = 0;
+      for (let i = 0; i < N; i++) {
+        const s0 = buf[i] + coeff * s1 - s2;
+        s2 = s1; s1 = s0;
+      }
+      return Math.sqrt(s1*s1 + s2*s2 - coeff*s1*s2) / N;
+    }
+
+    // Detect which tone is strongest on each channel
+    function detectSymbol(buf) {
+      const results = [];
+      for (let c = 0; c < CFG.nCh; c++) {
+        let maxMag = 0, maxT = 0;
+        const mags = [];
+        for (let t = 0; t < TONES; t++) {
+          const mag = goertzelMag(buf, alloc.channels[c].tones[t], actualSR);
+          mags.push(mag);
+          if (mag > maxMag) { maxMag = mag; maxT = t; }
+        }
+        // SNR check: strongest should be at least 2x average of others
+        const others = mags.filter((_,i)=>i!==maxT);
+        const avgOther = others.reduce((a,b)=>a+b,0) / others.length;
+        const snr = avgOther > 0 ? maxMag / avgOther : 100;
+        results.push({ tone: maxT, mag: maxMag, snr, valid: snr > 1.8 && maxMag > 0.001 });
+      }
+      return results;
+    }
+
+    function isPreambleSymbol(det) {
+      // Preamble: all channels have tone 0 or tone TONES-1
+      let hits = 0;
+      for (const d of det) {
+        if (d.valid && (d.tone === 0 || d.tone === TONES-1)) hits++;
+      }
+      return hits >= Math.max(1, Math.ceil(CFG.nCh * 0.5));
+    }
+
+    const self = this;
+    this.processor.onaudioprocess = function(e) {
+      if (!self.active) return;
+      const input = e.inputBuffer.getChannelData(0);
+
+      // Feed samples into symbol-length buffer
+      for (let i = 0; i < input.length; i++) {
+        sampleBuf[sampleIdx++] = input[i];
+
+        if (sampleIdx >= sampPerSym) {
+          // Process one symbol
+          const det = detectSymbol(sampleBuf);
+          sampleIdx = 0;
+
+          if (state === 'SYNC') {
+            if (isPreambleSymbol(det)) {
+              syncScore++;
+              if (syncScore >= 10) {
+                state = 'DATA';
+                symbols = [];
+                packetLen = -1;
+                errorCount = 0;
+                symbolCount = 0;
+                postambleCount = 0;
+                self.ui.status('데이터 수신 중...');
+                dbg('RX: preamble detected, entering DATA state');
+              }
+            } else {
+              syncScore = Math.max(0, syncScore - 1);
+            }
+          } else if (state === 'DATA') {
+            symbolCount++;
+
+            // Check for postamble (all channels tone 0)
+            const allZero = det.every(d => d.tone === 0 && d.valid);
+            if (allZero) {
+              postambleCount++;
+              if (postambleCount >= 3) {
+                // End of transmission
+                finishRx();
+                return;
+              }
+            } else {
+              postambleCount = 0;
+            }
+
+            // Collect nibbles from all channels (round-robin interleave)
+            for (let c = 0; c < CFG.nCh; c++) {
+              if (det[c].valid) {
+                symbols.push(det[c].tone);
+              } else {
+                symbols.push(0); // fallback
+                errorCount++;
+              }
+            }
+
+            // Try to determine packet length from header
+            if (packetLen < 0 && symbols.length >= 40) {
+              // Reconstruct bits from 3-bit symbols
+              const testBits = [];
+              for (const s of symbols) {
+                testBits.push((s>>2)&1, (s>>1)&1, s&1);
+              }
+              // Reconstruct bytes
+              const testBytes = [];
+              for (let b = 0; b + 7 < testBits.length; b += 8) {
+                let byte = 0;
+                for (let bit = 0; bit < 8; bit++) byte = (byte<<1)|testBits[b+bit];
+                testBytes.push(byte);
+              }
+              if (testBytes.length >= 5) {
+                const nLen = testBytes[1];
+                if (nLen <= 64 && testBytes.length > 2 + nLen + 2) {
+                  const dOff = 2 + nLen;
+                  const dataLen = (testBytes[dOff]<<16)|(testBytes[dOff+1]<<8)|testBytes[dOff+2];
+                  if (dataLen < 500000) { // sanity check
+                    packetLen = 1 + 1 + nLen + 3 + dataLen + 2;
+                    dbg(`RX: detected packet length = ${packetLen} bytes`);
+                  }
+                }
+              }
+            }
+
+            // Progress
+            if (packetLen > 0) {
+              // symbols needed: packetLen * 8 bits / 3 bits per symbol, rounded up
+              const symsNeeded = Math.ceil(packetLen * 8 / 3);
+              const pct = Math.min(symbols.length / symsNeeded, 1);
+              self.ui.progress(pct);
+              self.ui.bytes(Math.floor(symbols.length * 3 / 8));
+              self.ui.errors(errorCount);
+              self.ui.status(`수신 중 ${(pct*100)|0}% [${CFG.nCh}ch]`);
+
+              // Check completion
+              if (symbols.length >= symsNeeded) {
+                finishRx();
+              }
+            } else {
+              self.ui.bytes(Math.floor(symbols.length * 3 / 8));
+              self.ui.errors(errorCount);
+              self.ui.status(`수신 중... ${Math.floor(symbols.length * 3 / 8)}B`);
+            }
+          }
+        }
+      }
+
+      // Pass through silence
+      const out = e.outputBuffer.getChannelData(0);
+      for (let i = 0; i < out.length; i++) out[i] = 0;
+    };
+
+    function finishRx() {
+      state = 'DONE';
+      dbg(`RX: finishing, ${symbols.length} symbols received, ${errorCount} errors`);
+
+      // Reconstruct bits
+      const bits = [];
+      for (const s of symbols) bits.push((s>>2)&1, (s>>1)&1, s&1);
+
+      // Reconstruct bytes
+      const bytes = [];
+      for (let b = 0; b + 7 < bits.length; b += 8) {
+        let byte = 0;
+        for (let bit = 0; bit < 8; bit++) byte = (byte<<1)|bits[b+bit];
+        bytes.push(byte);
+      }
+
+      const pkt = parsePacket(bytes);
+      self.ui.complete(pkt, errorCount);
+
+      // Reset for next packet
+      setTimeout(() => {
+        if (self.active) {
+          state = 'SYNC';
+          syncScore = 0;
+          symbols = [];
+          packetLen = -1;
+          errorCount = 0;
+          postambleCount = 0;
+          self.ui.status('다음 패킷 대기 중...');
+          self.ui.progress(0);
+        }
+      }, 2000);
+    }
+
+    source.connect(this.processor);
+    this.processor.connect(ctx.destination);
+
+    // Waterfall visualization
+    const canvas = document.getElementById(this.ui.canvasId);
+    const c2d = canvas.getContext('2d');
+    canvas.width = canvas.offsetWidth * 2;
+    canvas.height = canvas.offsetHeight * 2;
+    const fftBuf = new Float32Array(analyser.frequencyBinCount);
+    const binHz = actualSR / analyser.fftSize;
+    const band = BANDS[CFG.mode];
+    const fftLo = Math.round((band.lo - 300) / binHz);
+    const fftHi = Math.round((band.hi + 300) / binHz);
+    const fftRange = fftHi - fftLo;
+    const chColors = [[0,229,160],[0,184,212],[167,139,250],[245,158,11]];
+
+    const drawWaterfall = () => {
+      if (!this.active) return;
+      analyser.getFloatFrequencyData(fftBuf);
+      const w = canvas.width, h = canvas.height;
+      const img = c2d.getImageData(2,0,w-2,h);
+      c2d.putImageData(img,0,0);
+
+      for (let y = 0; y < h; y++) {
+        const bin = fftLo + Math.floor((1-y/h)*fftRange);
+        if (bin >= 0 && bin < fftBuf.length) {
+          const val = Math.max(0, Math.min(1, (fftBuf[bin]+70)/45));
+          const freq = bin * binHz;
+          let col = chColors[0];
+          for (let c = 0; c < CFG.nCh && c < chColors.length; c++) {
+            const ach = alloc.channels[c];
+            if (freq >= ach.base - 50 && freq <= ach.hi + 50) { col = chColors[c]; break; }
+          }
+          c2d.fillStyle = `rgb(${(val*col[0])|0},${(val*col[1])|0},${(val*col[2])|0})`;
+          c2d.fillRect(w-2, y, 2, 1);
+        }
+      }
+      this.animId = requestAnimationFrame(drawWaterfall);
+    };
+    this.animId = requestAnimationFrame(drawWaterfall);
+
+    dbg(`RX: started, SR=${actualSR}, sampPerSym=${sampPerSym}, bufSize=${bufSize}`);
+  }
+
+  stop() {
+    this.active = false;
+    if (this.stream) { this.stream.getTracks().forEach(t=>t.stop()); this.stream = null; }
+    if (this.processor) { this.processor.disconnect(); this.processor = null; }
+    if (this.animId) { cancelAnimationFrame(this.animId); this.animId = null; }
+  }
+}
+
+// ═══════════════════════════════════════
+// MIC PERMISSION
+// ═══════════════════════════════════════
+let micResolver = null;
+function showMicOverlay() {
+  document.getElementById('micOverlay').classList.add('show');
+  return new Promise(r => { micResolver = r; });
+}
+function closeMicOverlay() {
+  document.getElementById('micOverlay').classList.remove('show');
+  if (micResolver) { micResolver(false); micResolver = null; }
+}
+async function doRequestMic() {
+  document.getElementById('micOverlay').classList.remove('show');
+  try {
+    const s = await navigator.mediaDevices.getUserMedia({
+      audio: { echoCancellation:false, noiseSuppression:false, autoGainControl:false }
+    });
+    s.getTracks().forEach(t=>t.stop());
+    if (micResolver) { micResolver(true); micResolver = null; }
+  } catch(e) {
+    alert('마이크 권한이 거부되었습니다.\n브라우저 설정에서 마이크를 허용해 주세요.');
+    if (micResolver) { micResolver(false); micResolver = null; }
+  }
+}
+async function ensureMic() {
+  try {
+    const p = await navigator.permissions.query({name:'microphone'});
+    if (p.state === 'granted') return true;
+  } catch(e) {}
+  return await showMicOverlay();
+}
+
+// ═══════════════════════════════════════
+// TEXT TX/RX
+// ═══════════════════════════════════════
+function updateTxStats() {
+  const text = document.getElementById('txInput').value;
+  const orig = new TextEncoder().encode(text).length;
+  const comp = compress(text);
+  const pkt = orig > 0 ? buildPacket(0x01, comp, '') : new Uint8Array(0);
+  // Each byte = 8 bits → ceil(8/3) = 3 symbols per byte (approx 2.67)
+  const totalSyms = Math.ceil(pkt.length * 8 / 3);
+  const symPerRound = CFG.nCh;
+  const dataRounds = Math.ceil(totalSyms / symPerRound);
+  const allRounds = PREAMBLE_LEN + dataRounds + 4;
+  const dur = allRounds / CFG.baud;
+  const bps = orig > 0 ? Math.round(orig * 8 / dur) : 0;
+
+  document.getElementById('txOrig').textContent = orig;
+  document.getElementById('txComp').textContent = comp.length;
+  document.getElementById('txEst').textContent = orig > 0 ? `${dur.toFixed(1)}s ~${bps}bps` : '-';
+}
+document.getElementById('txInput').addEventListener('input', updateTxStats);
+
+async function doTextTx() {
+  const text = document.getElementById('txInput').value;
+  if (!text || txBusy) return;
+  const btn = document.getElementById('txBtn');
+  const dot = document.getElementById('txDot');
+  btn.disabled = true; btn.textContent = '■ 전송 중...';
+  dot.classList.add('active');
+
+  const comp = compress(text);
+  const pkt = buildPacket(0x01, comp, '');
+  dbg(`TX text: orig=${new TextEncoder().encode(text).length}B, comp=${comp.length}B, pkt=${pkt.length}B`);
+
+  await transmitBytes(pkt, {
+    canvasId: 'txViz',
+    progress: p => document.getElementById('txProg').style.width = (p*100)+'%',
+    status: m => document.getElementById('txStat').textContent = m,
+  });
+
+  btn.disabled = false; btn.textContent = '▶ 전송';
+  dot.classList.remove('active');
+}
+
+let textRx = null;
+
+async function toggleTextRx() {
+  if (textRx) {
+    textRx.stop();
+    textRx = null;
+    document.getElementById('rxBtn').textContent = '● 수신 시작';
+    document.getElementById('rxBtn').className = 'btn btn-rx';
+    document.getElementById('rxDot').classList.remove('rx-active');
+    document.getElementById('rxStat').textContent = '대기 중';
+    document.getElementById('rxOut').textContent = '—';
+    document.getElementById('rxOut').style.borderColor = 'var(--border)';
+    document.getElementById('rxProg').style.width = '0%';
+    document.getElementById('rxBytes').textContent = '0';
+    document.getElementById('rxDecomp').textContent = '0';
+    document.getElementById('rxErr').textContent = '0';
+    return;
+  }
+
+  const ok = await ensureMic();
+  if (!ok) return;
+
+  document.getElementById('rxBtn').textContent = '■ 수신 중지';
+  document.getElementById('rxBtn').className = 'btn btn-stop';
+  document.getElementById('rxDot').classList.add('rx-active');
+  document.getElementById('rxStat').textContent = '수신 대기 중...';
+  document.getElementById('rxOut').textContent = '수신 대기 중...';
+  document.getElementById('rxOut').style.borderColor = 'var(--border)';
+  document.getElementById('rxProg').style.width = '0%';
+
+  textRx = new Receiver({
+    canvasId: 'rxViz',
+    status: m => document.getElementById('rxStat').textContent = m,
+    progress: p => document.getElementById('rxProg').style.width = (p*100)+'%',
+    bytes: b => document.getElementById('rxBytes').textContent = b,
+    errors: e => document.getElementById('rxErr').textContent = e,
+    complete: (pkt, errs) => {
+      if (pkt && pkt.crcOk) {
+        const decoded = new TextDecoder().decode(decompress(pkt.data));
+        document.getElementById('rxOut').textContent = decoded;
+        document.getElementById('rxOut').style.borderColor = 'var(--accent)';
+        document.getElementById('rxDecomp').textContent = new TextEncoder().encode(decoded).length;
+        document.getElementById('rxStat').textContent = `수신 완료 ✓ CRC OK (에러 ${errs})`;
+        dbg(`RX: text decoded OK, ${decoded.length} chars`);
+      } else if (pkt) {
+        try {
+          const decoded = new TextDecoder().decode(decompress(pkt.data));
+          document.getElementById('rxOut').textContent = decoded + '\n\n⚠ CRC 불일치 — 데이터 손상 가능';
+        } catch { document.getElementById('rxOut').textContent = '⚠ 디코딩 실패 (CRC 오류)'; }
+        document.getElementById('rxOut').style.borderColor = 'var(--danger)';
+        document.getElementById('rxStat').textContent = `수신 완료 (CRC 오류, 에러 ${errs})`;
+        dbg('RX: CRC mismatch');
+      }
+    }
+  });
+
+  try {
+    await textRx.start();
+  } catch(e) {
+    textRx = null;
+    document.getElementById('rxBtn').textContent = '● 수신 시작';
+    document.getElementById('rxBtn').className = 'btn btn-rx';
+    document.getElementById('rxDot').classList.remove('rx-active');
+    document.getElementById('rxStat').textContent = '마이크 접근 실패';
+  }
+}
+
+// ═══════════════════════════════════════
+// FILE TX/RX
+// ═══════════════════════════════════════
+let selFileData = null, selFileName = '';
+
+function onFileSelected(e) {
+  const f = e.target.files[0];
+  if (!f) return;
+  selFileName = f.name;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    selFileData = new Uint8Array(ev.target.result);
+    document.getElementById('fileInfo').style.display = 'block';
+    document.getElementById('fName').textContent = f.name;
+    document.getElementById('fSize').textContent = ' — ' + fmtSize(selFileData.length);
+    document.getElementById('ftxBtn').disabled = false;
+    const comp = compress(selFileData);
+    const pkt = buildPacket(0x02, comp, f.name);
+    const dur = (PREAMBLE_LEN + Math.ceil(pkt.length*8/3/CFG.nCh) + 4) / CFG.baud;
+    document.getElementById('ftxOrig').textContent = fmtSize(selFileData.length);
+    document.getElementById('ftxComp').textContent = fmtSize(comp.length);
+    document.getElementById('ftxEst').textContent = dur.toFixed(1) + 's';
+    document.getElementById('ftxStat').textContent = '전송 준비 완료';
+  };
+  reader.readAsArrayBuffer(f);
+}
+function fmtSize(b) { return b<1024?b+'B':b<1048576?(b/1024).toFixed(1)+'KB':(b/1048576).toFixed(2)+'MB'; }
+
+const dropZ = document.getElementById('fileDrop');
+dropZ.addEventListener('dragover', e=>{e.preventDefault();dropZ.classList.add('dragover');});
+dropZ.addEventListener('dragleave', ()=>dropZ.classList.remove('dragover'));
+dropZ.addEventListener('drop', e=>{
+  e.preventDefault(); dropZ.classList.remove('dragover');
+  const f = e.dataTransfer.files[0];
+  if (f) { const dt=new DataTransfer(); dt.items.add(f); document.getElementById('fileIn').files=dt.files; onFileSelected({target:{files:[f]}}); }
+});
+
+async function doFileTx() {
+  if (!selFileData || txBusy) return;
+  const btn = document.getElementById('ftxBtn');
+  const dot = document.getElementById('ftxDot');
+  btn.disabled = true; btn.textContent = '■ 전송 중...';
+  dot.classList.add('active');
+
+  const comp = compress(selFileData);
+  const pkt = buildPacket(0x02, comp, selFileName);
+  dbg(`TX file: ${selFileName}, orig=${selFileData.length}B, comp=${comp.length}B, pkt=${pkt.length}B`);
+
+  await transmitBytes(pkt, {
+    canvasId: 'ftxViz',
+    progress: p => document.getElementById('ftxProg').style.width = (p*100)+'%',
+    status: m => document.getElementById('ftxStat').textContent = m,
+  });
+
+  btn.disabled = false; btn.textContent = '▶ 파일 전송';
+  dot.classList.remove('active');
+}
+
+let fileRx = null;
+let rxFileBlob = null, rxFileName = '';
+
+async function toggleFileRx() {
+  if (fileRx) {
+    fileRx.stop();
+    fileRx = null;
+    document.getElementById('frxBtn').textContent = '● 수신 시작';
+    document.getElementById('frxBtn').className = 'btn btn-rx';
+    document.getElementById('frxDot').classList.remove('rx-active');
+    document.getElementById('frxStat').textContent = '대기 중';
+    document.getElementById('frxOut').textContent = '—';
+    document.getElementById('frxOut').style.borderColor = 'var(--border)';
+    document.getElementById('frxProg').style.width = '0%';
+    document.getElementById('frxBytes').textContent = '0';
+    document.getElementById('frxDecomp').textContent = '0';
+    document.getElementById('frxErr').textContent = '0';
+    return;
+  }
+
+  const ok = await ensureMic();
+  if (!ok) return;
+
+  document.getElementById('frxBtn').textContent = '■ 수신 중지';
+  document.getElementById('frxBtn').className = 'btn btn-stop';
+  document.getElementById('frxDot').classList.add('rx-active');
+  document.getElementById('frxStat').textContent = '수신 대기 중...';
+  document.getElementById('frxOut').textContent = '수신 대기 중...';
+  document.getElementById('frxOut').style.borderColor = 'var(--border)';
+  document.getElementById('frxDL').style.display = 'none';
+  document.getElementById('frxProg').style.width = '0%';
+
+  fileRx = new Receiver({
+    canvasId: 'frxViz',
+    status: m => document.getElementById('frxStat').textContent = m,
+    progress: p => document.getElementById('frxProg').style.width = (p*100)+'%',
+    bytes: b => document.getElementById('frxBytes').textContent = b,
+    errors: e => document.getElementById('frxErr').textContent = e,
+    complete: (pkt, errs) => {
+      if (pkt && pkt.type === 0x02) {
+        const fileData = decompress(pkt.data);
+        rxFileBlob = new Blob([fileData]);
+        rxFileName = pkt.name || 'received_file';
+        document.getElementById('frxDecomp').textContent = fmtSize(fileData.length);
+        document.getElementById('frxOut').textContent = pkt.crcOk
+          ? `✅ 파일 수신 완료\n파일명: ${rxFileName}\n크기: ${fmtSize(fileData.length)}\nCRC: OK`
+          : `⚠ 파일 수신 (CRC 오류)\n파일명: ${rxFileName}\n크기: ${fmtSize(fileData.length)}`;
+        document.getElementById('frxOut').style.borderColor = pkt.crcOk ? 'var(--accent)' : 'var(--danger)';
+        document.getElementById('frxDL').style.display = 'flex';
+        dbg(`RX file: ${rxFileName}, ${fileData.length}B, CRC ${pkt.crcOk?'OK':'FAIL'}`);
+      } else if (pkt && pkt.type === 0x01) {
+        const text = new TextDecoder().decode(decompress(pkt.data));
+        document.getElementById('frxOut').textContent = '(텍스트 패킷)\n' + text;
+        document.getElementById('frxOut').style.borderColor = 'var(--accent2)';
+      }
+    }
+  });
+
+  try {
+    await fileRx.start();
+  } catch(e) {
+    fileRx = null;
+    document.getElementById('frxBtn').textContent = '● 수신 시작';
+    document.getElementById('frxBtn').className = 'btn btn-rx';
+    document.getElementById('frxDot').classList.remove('rx-active');
+    document.getElementById('frxStat').textContent = '마이크 접근 실패';
+  }
+}
+
+function dlFile() {
+  if (!rxFileBlob) return;
+  const url = URL.createObjectURL(rxFileBlob);
+  const a = document.createElement('a'); a.href=url; a.download=rxFileName;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+// ═══════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════
+onConfigChange();
+</script>
+</body>
+</html>
