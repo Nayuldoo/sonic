@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SonicLink v7</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
+:root{
+  --bg:#060a12;--sf:#0c1424;--sf2:#13203a;--bd:#1a2d4a;
+  --a1:#00ffa8;--a2:#00d4ff;--a3:#b490ff;--a4:#ffb020;
+  --adim:rgba(0,255,168,.1);--dng:#ff4d6a;--wrn:#f5a623;
+  --tx:#c9d1d9;--td:#4a5a72;--tb:#f2f6ff;
+  --mono:'JetBrains Mono',monospace;--sans:'Noto Sans KR',sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--tx);font-family:var(--sans);min-height:100vh}
+body::before{content:'';position:fixed;inset:0;background:linear-gradient(rgba(0,255,168,.012) 1px,transparent 1px),linear-gradient(90deg,rgba(0,255,168,.012) 1px,transparent 1px);background-size:50px 50px;pointer-events:none}
+.ctn{position:relative;z-index:1;max-width:960px;margin:0 auto;padding:16px 14px 40px}
+.hdr{text-align:center;margin-bottom:16px}
+.logo{font-family:var(--mono);font-size:26px;font-weight:700;background:linear-gradient(135deg,var(--a1),var(--a2),var(--a3));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.sub{font-size:9px;color:var(--td);font-family:var(--mono);letter-spacing:3px;margin-top:1px}
+.tabs{display:flex;border-bottom:1px solid var(--bd);margin-bottom:12px}
+.tab{flex:1;padding:9px;text-align:center;font-family:var(--mono);font-size:11px;color:var(--td);cursor:pointer;border-bottom:2px solid transparent;transition:.2s}
+.tab:hover{color:var(--tx)}.tab.on{color:var(--a1);border-color:var(--a1)}
+.tc{display:none}.tc.on{display:block}
+.cfg{background:var(--sf);border:1px solid var(--bd);border-radius:10px;padding:12px 14px;margin-bottom:12px}
+.cfg-r{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.cg{display:flex;align-items:center;gap:5px;font-family:var(--mono);font-size:10px;color:var(--td)}
+.cg select{background:var(--bg);border:1px solid var(--bd);color:var(--tx);font-family:var(--mono);font-size:10px;padding:4px 6px;border-radius:5px;outline:none}
+.cg input[type=range]{width:60px;accent-color:var(--a1)}
+.cg button{background:var(--sf2);border:1px solid var(--bd);color:var(--a4);font-family:var(--mono);font-size:10px;padding:4px 10px;border-radius:5px;cursor:pointer}
+.cfg-warn{font-family:var(--mono);font-size:9px;color:var(--wrn);margin-top:6px;padding:5px 8px;background:rgba(245,166,35,.06);border:1px solid rgba(245,166,35,.15);border-radius:5px;line-height:1.5}
+.cfg-info{font-family:var(--mono);font-size:9px;color:var(--a2);margin-top:4px}
+.bm{margin-top:7px;border-top:1px solid var(--bd);padding-top:6px}
+.bm-t{font-family:var(--mono);font-size:8px;color:var(--td);letter-spacing:2px;margin-bottom:4px}
+.bm-r{display:flex;gap:2px}
+.bm-b{flex:1;height:14px;border-radius:3px;font-family:var(--mono);font-size:7px;color:rgba(255,255,255,.7);display:flex;align-items:center;justify-content:center}
+.cfg-id{font-family:var(--mono);font-size:9px;color:var(--a3);margin-top:4px}
+.pnls{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:700px){.pnls{grid-template-columns:1fr}}
+.pnl{background:var(--sf);border:1px solid var(--bd);border-radius:11px;padding:15px;position:relative;overflow:hidden}
+.pnl::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--a1),transparent);opacity:.4}
+.pnl.rx::before{background:linear-gradient(90deg,transparent,var(--a2),transparent)}
+.pt{font-family:var(--mono);font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:2px;color:var(--a1);margin-bottom:9px}
+.pnl.rx .pt{color:var(--a2)}
+textarea.inp{width:100%;min-height:75px;background:var(--bg);border:1px solid var(--bd);border-radius:7px;padding:8px;color:var(--tb);font-family:var(--mono);font-size:11px;line-height:1.5;resize:vertical;outline:none}
+textarea.inp:focus{border-color:var(--a1)}
+textarea.inp::placeholder{color:var(--td)}
+.rx-log{width:100%;min-height:75px;max-height:250px;overflow-y:auto;background:var(--bg);border:1px solid var(--bd);border-radius:7px;padding:4px}
+.rx-entry{padding:6px 8px;margin:2px 0;border-radius:5px;font-family:var(--mono);font-size:11px;line-height:1.4;word-break:break-all;white-space:pre-wrap}
+.rx-entry.ok{background:rgba(0,255,168,.06);border-left:3px solid var(--a1)}
+.rx-entry.fail{background:rgba(255,77,106,.06);border-left:3px solid var(--dng)}
+.rx-entry .rx-time{font-size:9px;color:var(--td);display:block}
+.rx-entry .rx-text{color:var(--tb)}
+.rx-entry .rx-meta{font-size:8px;color:var(--td);margin-top:2px;display:block}
+.rx-empty{padding:12px;text-align:center;font-family:var(--mono);font-size:11px;color:var(--td)}
+.rx-clear{font-family:var(--mono);font-size:9px;color:var(--td);cursor:pointer;text-align:right;margin-top:3px}
+.rx-clear:hover{color:var(--dng)}
+.out{width:100%;min-height:75px;background:var(--bg);border:1px solid var(--bd);border-radius:7px;padding:8px;color:var(--tb);font-family:var(--mono);font-size:11px;line-height:1.5;overflow-y:auto;word-break:break-all;white-space:pre-wrap}
+.fdrop{border:2px dashed var(--bd);border-radius:8px;padding:18px 10px;text-align:center;cursor:pointer;transition:.2s;background:var(--bg)}
+.fdrop:hover,.fdrop.dv{border-color:var(--a1);background:var(--adim)}
+.fdrop .ic{font-size:22px}.fdrop .lb{font-family:var(--mono);font-size:10px;color:var(--td);margin-top:2px}
+.fi{margin-top:6px;padding:6px 10px;background:var(--sf2);border-radius:6px;border:1px solid var(--bd);font-family:var(--mono);font-size:10px;display:none}
+.fi .fn{color:var(--a1);font-weight:600}
+.br{display:flex;gap:6px;margin-top:8px}
+.btn{flex:1;padding:9px 10px;border:none;border-radius:7px;font-family:var(--mono);font-size:11px;font-weight:600;cursor:pointer;transition:.2s;display:flex;align-items:center;justify-content:center;gap:4px}
+.bt{background:linear-gradient(135deg,var(--a1),#00c98a);color:var(--bg)}
+.bt:hover{box-shadow:0 3px 14px rgba(0,255,168,.3);transform:translateY(-1px)}
+.bt:disabled{opacity:.3;cursor:not-allowed;transform:none;box-shadow:none}
+.brc{background:linear-gradient(135deg,var(--a2),#0098b0);color:var(--bg)}
+.brc:hover{box-shadow:0 3px 14px rgba(0,212,255,.3);transform:translateY(-1px)}
+.brc:disabled{opacity:.3;cursor:not-allowed;transform:none;box-shadow:none}
+.bst{background:var(--dng);color:#fff}
+.bdl{background:var(--a3);color:#fff;margin-top:5px;display:none}
+.sts{display:flex;gap:8px;margin-top:6px;flex-wrap:wrap}
+.st{font-family:var(--mono);font-size:9px;color:var(--td)}
+.st b{color:var(--a1);font-weight:500}
+.pnl.rx .st b{color:var(--a2)}
+.pb{height:3px;background:var(--bd);border-radius:2px;margin-top:6px;overflow:hidden}
+.pf{height:100%;background:linear-gradient(90deg,var(--a1),var(--a2));border-radius:2px;width:0%;transition:width .1s}
+.sl{font-family:var(--mono);font-size:9px;color:var(--td);margin-top:5px;display:flex;align-items:center;gap:4px;min-height:12px}
+.sd{width:6px;height:6px;border-radius:50%;background:var(--td);flex-shrink:0}
+.sd.on{background:var(--a1);box-shadow:0 0 8px var(--a1);animation:pls 1s infinite}
+.sd.onr{background:var(--a2);box-shadow:0 0 8px var(--a2);animation:pls 1s infinite}
+@keyframes pls{0%,100%{opacity:1}50%{opacity:.3}}
+.viz{margin-top:6px;height:100px;background:var(--bg);border-radius:7px;border:1px solid var(--bd);overflow:hidden;position:relative}
+.viz canvas{width:100%;height:100%;display:block}
+.viz-lb{position:absolute;bottom:2px;right:5px;font-family:var(--mono);font-size:7px;color:var(--td);pointer-events:none}
+.mo{display:none;position:fixed;inset:0;z-index:100;background:rgba(6,10,18,.9);backdrop-filter:blur(6px);align-items:center;justify-content:center}
+.mo.show{display:flex}
+.mdlg{background:var(--sf);border:1px solid var(--bd);border-radius:13px;padding:24px;max-width:350px;text-align:center}
+.mdlg .mi{font-size:36px;margin-bottom:6px}
+.mdlg h3{font-family:var(--mono);font-size:13px;color:var(--tb);margin-bottom:4px}
+.mdlg p{font-size:11px;color:var(--td);line-height:1.6;margin-bottom:12px}
+.mdlg .ms{text-align:left;font-size:10px;color:var(--tx);line-height:1.7;background:var(--bg);border-radius:6px;padding:9px 12px;margin-bottom:12px;font-family:var(--mono)}
+.mr{display:flex;gap:6px}
+.mb{flex:1;padding:9px;border:none;border-radius:7px;font-family:var(--mono);font-size:11px;font-weight:600;cursor:pointer}
+.mba{background:var(--a2);color:var(--bg)}.mbc{background:var(--sf2);color:var(--td);border:1px solid var(--bd)}
+.dbg-t{font-family:var(--mono);font-size:9px;color:var(--td);cursor:pointer;margin-top:8px;text-align:center}
+.dbg{display:none;margin-top:5px;padding:7px;background:var(--bg);border:1px solid var(--bd);border-radius:6px;font-family:var(--mono);font-size:8px;color:var(--td);max-height:200px;overflow-y:auto;line-height:1.5;white-space:pre-wrap}
+.dbg.show{display:block}
+</style>
+</head>
+<body>
+<div class="mo" id="micO"><div class="mdlg"><div class="mi">🎙️</div><h3>마이크 권한 필요</h3><p>음파 수신에 마이크 접근이 필요합니다.</p><div class="ms">📱 모바일: 팝업 → 허용<br>💻 PC: 주소창 🔒 → 마이크 허용</div><div class="mr"><button class="mb mbc" onclick="closeMic()">취소</button><button class="mb mba" onclick="reqMic()">권한 요청</button></div></div></div>
+<div class="ctn">
+<div class="hdr"><div class="logo">⟨ SonicLink v7 ⟩</div><div class="sub">RELIABLE ACOUSTIC MODEM</div></div>
+<div class="tabs"><div class="tab on" onclick="swTab('text')">📝 텍스트</div><div class="tab" onclick="swTab('file')">📁 파일</div></div>
+<div class="cfg">
+  <div class="cfg-r">
+    <div class="cg"><span>대역</span><select id="selMode" onchange="cfgChg()"><option value="mid" selected>비간섭 5.5-8kHz</option><option value="ultra">준초음파 14-18kHz</option></select></div>
+    <div class="cg"><span>채널</span><select id="selCh" onchange="cfgChg()"><option value="1" selected>1ch</option><option value="2">2ch</option></select></div>
+    <div class="cg"><span>속도</span><select id="selBd" onchange="cfgChg()"><option value="25">25bd</option><option value="40" selected>40bd</option><option value="60">60bd</option></select></div>
+    <div class="cg"><span>볼륨</span><input type="range" id="selVol" min="0.2" max="1" step="0.05" value="0.9" oninput="cfgChg()"></div>
+    <div class="cg"><button onclick="testTone()">🔊 테스트</button></div>
+  </div>
+  <div class="cfg-warn">⚠ 송·수신 양쪽 설정을 동일하게 맞추세요</div>
+  <div class="cfg-info" id="cfgInfo"></div>
+  <div class="bm"><div class="bm-t">TONE MAP</div><div class="bm-r" id="bmRow"></div></div>
+  <div class="cfg-id" id="cfgId"></div>
+</div>
+<div class="tc on" id="tc-text"><div class="pnls" style="margin-top:8px">
+  <div class="pnl tx"><div class="pt">📡 TRANSMIT</div>
+    <textarea class="inp" id="txIn" placeholder="전송할 텍스트..."></textarea>
+    <div class="sts"><div class="st">원본 <b id="s_to">0</b>B</div><div class="st">압축 <b id="s_tc">0</b>B</div><div class="st">예상 <b id="s_tt">-</b></div></div>
+    <div class="br"><button class="btn bt" id="txBtn" onclick="doTxText()">▶ 전송</button></div>
+    <div class="pb"><div class="pf" id="txPg"></div></div>
+    <div class="sl"><span class="sd" id="txD"></span><span id="txS">대기 중</span></div>
+    <div class="viz"><canvas id="txC"></canvas><div class="viz-lb">WAVEFORM</div></div>
+  </div>
+  <div class="pnl rx"><div class="pt">📻 RECEIVE</div>
+    <div class="rx-log" id="rxLog"><div class="rx-empty" id="rxEmpty">수신 메시지 없음</div></div>
+    <div class="rx-clear" onclick="$('rxLog').innerHTML='<div class=rx-empty>수신 메시지 없음</div>'">✕ 기록 지우기</div>
+    <div class="sts"><div class="st">수신 <b id="s_rb">0</b>B</div><div class="st">복원 <b id="s_rd">0</b>B</div><div class="st">에러 <b id="s_re">0</b></div><div class="st">횟수 <b id="s_rn">0</b></div></div>
+    <div class="br"><button class="btn brc" id="rxBtn" onclick="togRx('text')">● 수신 시작</button></div>
+    <div class="pb"><div class="pf" id="rxPg"></div></div>
+    <div class="sl"><span class="sd" id="rxD"></span><span id="rxS">대기 중</span></div>
+    <div class="viz"><canvas id="rxC"></canvas><div class="viz-lb">SPECTRUM</div></div>
+  </div>
+</div></div>
+<div class="tc" id="tc-file"><div class="pnls" style="margin-top:8px">
+  <div class="pnl tx"><div class="pt">📡 FILE TX</div>
+    <div class="fdrop" id="fDrop" onclick="$('fIn').click()"><div class="ic">📎</div><div class="lb">파일 선택 / 드래그 (10KB 이하)</div></div>
+    <input type="file" id="fIn" style="display:none" onchange="onFile(event)">
+    <div class="fi" id="fI"><span class="fn" id="fN"></span> <span id="fSz"></span></div>
+    <div class="sts"><div class="st">원본 <b id="s_fo">0</b></div><div class="st">압축 <b id="s_fc">0</b></div><div class="st">예상 <b id="s_fe">-</b></div></div>
+    <div class="br"><button class="btn bt" id="ftxBtn" onclick="doTxFile()" disabled>▶ 파일 전송</button></div>
+    <div class="pb"><div class="pf" id="ftxPg"></div></div>
+    <div class="sl"><span class="sd" id="ftxD"></span><span id="ftxS">파일 선택 필요</span></div>
+    <div class="viz"><canvas id="ftxC"></canvas><div class="viz-lb">WAVEFORM</div></div>
+  </div>
+  <div class="pnl rx"><div class="pt">📻 FILE RX</div>
+    <div class="rx-log" id="frxLog"><div class="rx-empty" id="frxEmpty">수신 파일 없음</div></div>
+    <div class="sts"><div class="st">수신 <b id="s_fb">0</b>B</div><div class="st">복원 <b id="s_fd">0</b>B</div><div class="st">에러 <b id="s_fe2">0</b></div></div>
+    <div class="br"><button class="btn brc" id="frxBtn" onclick="togRx('file')">● 수신 시작</button></div>
+    <button class="btn bdl" id="frxDL" onclick="dlFile()">💾 파일 다운로드</button>
+    <div class="pb"><div class="pf" id="frxPg"></div></div>
+    <div class="sl"><span class="sd" id="frxD"></span><span id="frxS">대기 중</span></div>
+    <div class="viz"><canvas id="frxC"></canvas><div class="viz-lb">SPECTRUM</div></div>
+  </div>
+</div></div>
+<div class="dbg-t" onclick="$('dbg').classList.toggle('show')">▼ 디버그 로그</div>
+<div class="dbg" id="dbg"></div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+
+/*
+ ═══════════════════════════════════════════
+  PROTOCOL v7 — CLEAN, NO GAPS
+ ═══════════════════════════════════════════
+  4-FSK, 2 bit/sym, 1 byte = 4 sym
+
+  Frame (continuous, no gaps):
+    PREAMBLE  30 sym : tone0/tone3 alternating
+    SYNC       6 sym : [1,2,2,1,2,1] ← uses ONLY tones 1,2
+    LENGTH     8 sym : 2 bytes = payload byte count
+    DATA      N*4 sym: payload
+    (silence follows naturally)
+
+  Key insight: preamble uses ONLY tones 0,3.
+  SYNC uses ONLY tones 1,2. Therefore the transition
+  from preamble to SYNC is unambiguous — the first
+  appearance of tone 1 or 2 signals SYNC has begun.
+*/
+
+const TONES=4, PRE_SYMS=30, LEN_SYMS=8;
+// SYNC uses only tones 1,2 — never confused with preamble (0,3)
+const SYNC_PAT=[1,2,2,1,2,1];
+
+const BANDS={mid:{lo:5500,hi:8000},ultra:{lo:14000,hi:18000}};
+let C={mode:'mid',nCh:1,baud:40,vol:0.9};
+let actx=null,txBusy=false,rxCount=0;
+
+function log(m){const e=$('dbg'),t=new Date().toLocaleTimeString('ko',{hour12:false});e.textContent+=`[${t}] ${m}\n`;e.scrollTop=e.scrollHeight}
+function hexDump(b,n){return Array.from(b.slice(0,n||20)).map(x=>x.toString(16).padStart(2,'0')).join(' ')}
+
+// ═══════ FREQ ═══════
+function allocTones(){
+  const b=BANDS[C.mode],bw=b.hi-b.lo,chBW=Math.floor(bw/C.nCh);
+  const gap=Math.floor((chBW-100)/TONES),chs=[];
+  for(let c=0;c<C.nCh;c++){const base=b.lo+c*chBW+50;const tones=[];for(let t=0;t<TONES;t++)tones.push(base+t*gap);chs.push({base,tones,gap,hi:tones[3]+gap/2})}
+  return chs;
+}
+
+// ═══════ CONFIG ═══════
+function cfgChg(){
+  C.mode=$('selMode').value;C.nCh=+$('selCh').value;C.baud=+$('selBd').value;C.vol=+$('selVol').value;
+  const bw=BANDS[C.mode].hi-BANDS[C.mode].lo;
+  while(C.nCh>1&&Math.floor((bw/C.nCh-100)/TONES)<100){C.nCh--;$('selCh').value=C.nCh}
+  const chs=allocTones(),cls=['#00ffa8','#00d4ff','#b490ff','#ffb020'];
+  const r=$('bmRow');r.innerHTML='';
+  chs.forEach((ch,i)=>{const d=document.createElement('div');d.className='bm-b';d.style.background=cls[i%4]+'30';d.style.border='1px solid '+cls[i%4]+'55';d.textContent=`CH${i+1}: ${ch.tones.map(f=>(f/1e3).toFixed(1)).join('/')}k`;d.style.fontSize='7px';r.appendChild(d)});
+  $('cfgId').textContent=`설정코드: ${C.mode.toUpperCase()}-${C.nCh}CH-${C.baud}BD`;
+  $('cfgInfo').textContent=`톤 간격: ${chs[0].gap}Hz | ${C.nCh*2*C.baud}bps (${(C.nCh*2*C.baud/8)|0}B/s)`;
+  updStats();
+}
+function swTab(t){document.querySelectorAll('.tab').forEach((e,i)=>e.classList.toggle('on',(i===0&&t==='text')||(i===1&&t==='file')));$('tc-text').classList.toggle('on',t==='text');$('tc-file').classList.toggle('on',t==='file')}
+function testTone(){const ctx=getCtx(),chs=allocTones();for(const ch of chs)for(const f of ch.tones){const o=ctx.createOscillator(),g=ctx.createGain();o.frequency.value=f;g.gain.value=C.vol*0.08/(chs.length*TONES);o.connect(g);g.connect(ctx.destination);o.start();o.stop(ctx.currentTime+0.4)}log(`테스트 톤: ${chs.map(c=>c.tones.join('/')).join(' | ')}`)}
+
+// ═══════ COMPRESSION ═══════
+function compress(inp){const b=(inp instanceof Uint8Array)?inp:new TextEncoder().encode(inp);if(!b.length)return new Uint8Array(0);const o=[];let i=0;while(i<b.length){let bl=0,bd=0;const md=Math.min(i,255),ml=Math.min(b.length-i,31);for(let d=1;d<=md;d++){let l=0;while(l<ml&&b[i+l]===b[i-d+(l%d)])l++;if(l>bl&&l>=3){bl=l;bd=d}}if(bl>=3){o.push(0xFE,bd,bl);i+=bl}else{if(b[i]===0xFE)o.push(0xFE,0,0);else o.push(b[i]);i++}}return new Uint8Array(o)}
+function decompress(d){if(!d||!d.length)return new Uint8Array(0);const o=[];let i=0;while(i<d.length){if(d[i]===0xFE){i++;if(i+1>=d.length)break;const dist=d[i++],len=d[i++];if(dist===0&&len===0)o.push(0xFE);else for(let j=0;j<len;j++)o.push(o[o.length-dist])}else o.push(d[i++])}return new Uint8Array(o)}
+function crc16(d){let c=0xFFFF;for(let i=0;i<d.length;i++){c^=d[i];for(let j=0;j<8;j++)c=(c&1)?((c>>1)^0xA001):(c>>1)}return c&0xFFFF}
+
+// ═══════ PACKET ═══════
+function buildPayload(type,data,name){
+  const nb=name?new TextEncoder().encode(name.slice(0,60)):new Uint8Array(0);
+  const body=new Uint8Array(1+1+nb.length+data.length);body[0]=type;body[1]=nb.length;if(nb.length)body.set(nb,2);body.set(data,2+nb.length);
+  const crc=crc16(body);const pkt=new Uint8Array(body.length+2);pkt.set(body);pkt[body.length]=(crc>>8)&0xFF;pkt[body.length+1]=crc&0xFF;return pkt;
+}
+function parsePayload(bytes){
+  if(bytes.length<4)return null;const type=bytes[0],nLen=bytes[1];
+  if(type!==1&&type!==2)return null;if(nLen>60||2+nLen>bytes.length-2)return null;
+  const name=nLen>0?new TextDecoder().decode(new Uint8Array(bytes.slice(2,2+nLen))):'';
+  const data=bytes.slice(2+nLen,bytes.length-2);
+  const rxCrc=(bytes[bytes.length-2]<<8)|bytes[bytes.length-1];
+  const calc=crc16(new Uint8Array(bytes.slice(0,bytes.length-2)));
+  return{type,name,data:new Uint8Array(data),crcOk:rxCrc===calc};
+}
+function byteToSyms(b){return[(b>>6)&3,(b>>4)&3,(b>>2)&3,b&3]}
+function symsToBytes(s){const b=[];for(let i=0;i+3<s.length;i+=4)b.push(((s[i]&3)<<6)|((s[i+1]&3)<<4)|((s[i+2]&3)<<2)|(s[i+3]&3));return b}
+
+// ═══════ AUDIO ═══════
+function getCtx(){if(!actx){actx=new(window.AudioContext||window.webkitAudioContext)({sampleRate:48000});log(`AudioContext: SR=${actx.sampleRate}Hz`)}if(actx.state==='suspended')actx.resume();return actx}
+
+// ═══════ TRANSMIT (continuous, no gaps) ═══════
+async function transmit(payload,ui){
+  if(txBusy)return;txBusy=true;
+  const ctx=getCtx(),sr=ctx.sampleRate,chs=allocTones();
+  const sps=Math.round(sr/C.baud),ramp=Math.min(Math.floor(sps*0.06),24);
+
+  const chBytes=Array.from({length:C.nCh},()=>[]);
+  for(let i=0;i<payload.length;i++)chBytes[i%C.nCh].push(payload[i]);
+  const maxBytes=Math.max(...chBytes.map(c=>c.length));
+  const chSyms=chBytes.map(cb=>{const s=[];for(const b of cb)s.push(...byteToSyms(b));return s});
+  const maxDataSyms=maxBytes*4;
+  const lenBytes=[(payload.length>>8)&0xFF,payload.length&0xFF];
+  const lenSymArr=[...byteToSyms(lenBytes[0]),...byteToSyms(lenBytes[1])];
+
+  // Total = PRE + SYNC + LEN + DATA + 4 trailing silence
+  const totalSyms=PRE_SYMS+SYNC_PAT.length+LEN_SYMS+maxDataSyms+4;
+  const buf=ctx.createBuffer(1,totalSyms*sps,sr);
+  const d=buf.getChannelData(0);
+  const amp=(C.vol*0.4)/Math.sqrt(C.nCh);
+
+  function writeTone(freq,si){const off=si*sps;for(let s=0;s<sps;s++){let a=amp;if(s<ramp)a*=(1-Math.cos(Math.PI*s/ramp))/2;else if(s>sps-ramp)a*=(1-Math.cos(Math.PI*(sps-s)/ramp))/2;if(off+s<d.length)d[off+s]+=a*Math.sin(2*Math.PI*freq*(off+s)/sr)}}
+
+  let si=0;
+  // PREAMBLE: alternate tone0, tone3
+  for(let s=0;s<PRE_SYMS;s++,si++) for(let c=0;c<C.nCh;c++) writeTone(chs[c].tones[s%2===0?0:3],si);
+  // SYNC: [1,2,2,1,2,1] — directly after preamble, no gap
+  for(let s=0;s<SYNC_PAT.length;s++,si++) for(let c=0;c<C.nCh;c++) writeTone(chs[c].tones[SYNC_PAT[s]],si);
+  // LENGTH
+  for(let s=0;s<LEN_SYMS;s++,si++) for(let c=0;c<C.nCh;c++) writeTone(chs[c].tones[lenSymArr[s]],si);
+  // DATA
+  for(let s=0;s<maxDataSyms;s++,si++) for(let c=0;c<C.nCh;c++){const v=s<chSyms[c].length?chSyms[c][s]:0;writeTone(chs[c].tones[v],si)}
+  // Trailing silence (si already past)
+
+  log(`TX: ${payload.length}B, ${maxDataSyms}sym/ch, frame=${totalSyms}sym, ${(totalSyms/C.baud).toFixed(1)}s`);
+
+  const src=ctx.createBufferSource();src.buffer=buf;src.connect(ctx.destination);src.start();
+  const t0=ctx.currentTime,dur=totalSyms/C.baud;
+  const cv=document.getElementById(ui.cid),cx=cv.getContext('2d');cv.width=cv.offsetWidth*2;cv.height=cv.offsetHeight*2;
+  function anim(){const el=ctx.currentTime-t0,p=Math.min(el/dur,1);ui.prog(p);ui.status(`전송 ${(p*100)|0}% [${C.nCh}ch]`);const w=cv.width,h=cv.height;cx.fillStyle='#060a12';cx.fillRect(0,0,w,h);const cs=Math.floor(el*sr),win=sps*6;cx.beginPath();for(let x=0;x<w;x++){const s2=cs-win/2+Math.floor(x*win/w);const v=(s2>=0&&s2<d.length)?d[s2]:0;const y=h/2-v*h*2.5;x===0?cx.moveTo(x,y):cx.lineTo(x,y)}cx.strokeStyle='rgba(0,255,168,0.06)';cx.lineWidth=18;cx.stroke();cx.strokeStyle='rgba(0,255,168,0.15)';cx.lineWidth=8;cx.stroke();cx.strokeStyle='#00ffa8';cx.lineWidth=1.5;cx.stroke();if(p<1)requestAnimationFrame(anim)}
+  requestAnimationFrame(anim);
+  return new Promise(r=>{src.onended=()=>{ui.prog(1);ui.status('전송 완료 ✓');txBusy=false;r()}});
+}
+
+// ═══════ RECEIVE ═══════
+class Rx{
+  constructor(ui){this.ui=ui;this.on=false;this.stream=null;this.proc=null;this.anim=null}
+  async start(){
+    const ctx=getCtx(),sr=ctx.sampleRate,chs=allocTones();
+    this.stream=await navigator.mediaDevices.getUserMedia({audio:{sampleRate:48000,echoCancellation:false,noiseSuppression:false,autoGainControl:false}});
+    this.on=true;
+    const source=ctx.createMediaStreamSource(this.stream);
+    const sps=Math.round(sr/C.baud);
+    const bufSz=Math.pow(2,Math.ceil(Math.log2(sps)));
+    this.proc=ctx.createScriptProcessor(bufSz,1,1);
+    const an=ctx.createAnalyser();an.fftSize=8192;an.smoothingTimeConstant=0.15;source.connect(an);
+
+    /*
+      State machine (simple, no gaps):
+        WAIT_PRE  → detect alternating tone0/3 for ≥10 symbols
+        WAIT_SYNC → collect symbols; match [1,2,2,1,2,1] (fuzzy: ≤1 error)
+                     The transition is unambiguous because preamble only
+                     produces tones 0,3 and SYNC only uses tones 1,2.
+        READ_LEN  → read exactly 8 symbols → 2 bytes → payload length
+        READ_DATA → read exactly ceil(payloadLen/nCh)*4 symbols per channel
+    */
+    let state='WAIT_PRE',preCount=0;
+    let syncBuf=[],lenSymArr=[],dataSyms=[];
+    let payloadLen=-1,errCnt=0,totalDataSymsNeeded=0;
+    let symBuf=new Float32Array(sps),symIdx=0;
+
+    function goertzel(buf,freq){const N=buf.length,k=Math.round(freq*N/sr),w=2*Math.PI*k/N,co=2*Math.cos(w);let s1=0,s2=0;for(let i=0;i<N;i++){const s0=buf[i]+co*s1-s2;s2=s1;s1=s0}return Math.sqrt(s1*s1+s2*s2-co*s1*s2)/N}
+
+    function detectCh(buf,ci){const ch=chs[ci];let mx=0,mt=0;const mg=[];for(let t=0;t<TONES;t++){const m=goertzel(buf,ch.tones[t]);mg.push(m);if(m>mx){mx=m;mt=t}}const rest=mg.filter((_,i)=>i!==mt);const avg=rest.reduce((a,b)=>a+b,0)/rest.length;const snr=avg>0?mx/avg:99;return{tone:mt,mag:mx,snr,ok:snr>1.3&&mx>0.0005}}
+    function detectAll(buf){const r=[];for(let c=0;c<C.nCh;c++)r.push(detectCh(buf,c));return r}
+    function isPre(det){return det.every(d=>d.ok&&(d.tone===0||d.tone===3))}
+
+    function matchSync(hist){
+      if(hist.length<SYNC_PAT.length)return false;
+      const s=hist.length-SYNC_PAT.length;
+      let miss=0;for(let i=0;i<SYNC_PAT.length;i++)if(hist[s+i]!==SYNC_PAT[i])miss++;
+      return miss<=1;
+    }
+
+    const self=this;
+
+    this.proc.onaudioprocess=function(e){
+      if(!self.on)return;
+      const inp=e.inputBuffer.getChannelData(0);
+      for(let i=0;i<inp.length;i++){
+        symBuf[symIdx++]=inp[i];
+        if(symIdx<sps)continue;
+        symIdx=0;
+
+        const det=detectAll(symBuf);
+        const t0=det[0].ok?det[0].tone:-1;
+
+        if(state==='WAIT_PRE'){
+          if(isPre(det)){preCount++;if(preCount>=10){state='WAIT_SYNC';syncBuf=[];log('RX: preamble locked → WAIT_SYNC');self.ui.status('SYNC 대기...')}}
+          else preCount=Math.max(0,preCount-1);
+        }
+
+        else if(state==='WAIT_SYNC'){
+          // Preamble still arriving? (tone 0 or 3) → skip, keep waiting
+          if(t0===0||t0===3){/* still preamble, ignore */}
+          else if(t0>=0){
+            syncBuf.push(t0);
+            if(matchSync(syncBuf)){
+              state='READ_LEN';lenSymArr=[];
+              log('RX: SYNC detected → READ_LEN');
+              self.ui.status('길이 수신...');
+            }
+          }
+          if(syncBuf.length>30){log('RX: SYNC timeout');state='WAIT_PRE';preCount=0;self.ui.status('수신 대기 중...')}
+        }
+
+        else if(state==='READ_LEN'){
+          // Use majority vote across channels for LENGTH
+          if(C.nCh>1){const v=new Array(TONES).fill(0);for(const d of det)if(d.ok)v[d.tone]++;let best=0;for(let t=1;t<TONES;t++)if(v[t]>v[best])best=t;lenSymArr.push(best)}
+          else{lenSymArr.push(t0>=0?t0:0);if(t0<0)errCnt++}
+
+          if(lenSymArr.length>=LEN_SYMS){
+            const lb=symsToBytes(lenSymArr);
+            payloadLen=(lb[0]<<8)|lb[1];
+            log(`RX: payloadLen=${payloadLen}B, lenSyms=[${lenSymArr.join(',')}]`);
+            if(payloadLen<=0||payloadLen>65535){log('RX: bad length, reset');state='WAIT_PRE';preCount=0;self.ui.status('수신 대기 중...')}
+            else{
+              state='READ_DATA';
+              dataSyms=Array.from({length:C.nCh},()=>[]);
+              const bpc=[];for(let c=0;c<C.nCh;c++){let n=Math.floor(payloadLen/C.nCh);if(c<payloadLen%C.nCh)n++;bpc.push(n)}
+              totalDataSymsNeeded=Math.max(...bpc)*4;
+              log(`RX: need ${totalDataSymsNeeded} syms/ch`);
+              self.ui.status(`데이터 수신 0/${payloadLen}B`);
+            }
+          }
+        }
+
+        else if(state==='READ_DATA'){
+          for(let c=0;c<C.nCh;c++){dataSyms[c].push(det[c].ok?det[c].tone:det[c].tone);if(!det[c].ok)errCnt++}
+          const sr2=Math.min(...dataSyms.map(s=>s.length));
+          const br=Math.floor(sr2/4)*C.nCh;
+          self.ui.bytes(Math.min(br,payloadLen));self.ui.errors(errCnt);
+          const pct=Math.min(sr2/totalDataSymsNeeded,1);
+          self.ui.prog(pct);self.ui.status(`수신 ${(pct*100)|0}% — ${Math.min(br,payloadLen)}/${payloadLen}B`);
+          if(sr2>=totalDataSymsNeeded)finishRx();
+        }
+      }
+      const out=e.outputBuffer.getChannelData(0);for(let j=0;j<out.length;j++)out[j]=0;
+    };
+
+    function finishRx(){
+      state='DONE';
+      const chBA=dataSyms.map(s=>symsToBytes(s));
+      const result=[];const mx=Math.max(...chBA.map(b=>b.length));
+      for(let i=0;i<mx;i++)for(let c=0;c<C.nCh;c++)if(i<chBA[c].length&&result.length<payloadLen)result.push(chBA[c][i]);
+      log(`RX: ${result.length}B assembled, err=${errCnt}, hex=[${hexDump(result,24)}]`);
+      const pkt=parsePayload(result);
+      if(!pkt)log(`RX: parse null, type=${result[0]}, nLen=${result[1]}, bytes=[${hexDump(result,10)}]`);
+      else if(!pkt.crcOk)log(`RX: CRC FAIL, calc=${crc16(new Uint8Array(result.slice(0,result.length-2))).toString(16)}`);
+      self.ui.complete(pkt,errCnt,result);
+      setTimeout(()=>{if(self.on){state='WAIT_PRE';preCount=0;errCnt=0;payloadLen=-1;self.ui.status('다음 패킷 대기...');self.ui.prog(0)}},1500);
+    }
+
+    source.connect(this.proc);this.proc.connect(ctx.destination);
+
+    // Spectrum viz
+    const cv=document.getElementById(this.ui.cid),cx=cv.getContext('2d');cv.width=cv.offsetWidth*2;cv.height=cv.offsetHeight*2;
+    const fftD=new Float32Array(an.frequencyBinCount),binHz=sr/an.fftSize;
+    const band=BANDS[C.mode],fLo=Math.round((band.lo-500)/binHz),fHi=Math.round((band.hi+500)/binHz),fR=fHi-fLo;
+    const chCols=[[0,255,168],[0,212,255],[180,144,255],[255,176,32]];
+    const toneBins=[];for(const ch of chs)for(const f of ch.tones)toneBins.push(Math.round(f/binHz));
+    const drawViz=()=>{if(!this.on)return;an.getFloatFrequencyData(fftD);const w=cv.width,h=cv.height;const img=cx.getImageData(3,0,w-3,h);cx.putImageData(img,0,0);for(let y=0;y<h;y++){const bin=fLo+Math.floor((1-y/h)*fR);if(bin<0||bin>=fftD.length)continue;const raw=(fftD[bin]+60)/35;const val=Math.max(0,Math.min(1,raw));const freq=bin*binHz;let col=[40,50,60];for(let c=0;c<C.nCh&&c<chCols.length;c++){if(freq>=chs[c].base-30&&freq<=chs[c].hi+30){col=chCols[c];break}}const v=Math.pow(val,1.5);const isTone=toneBins.some(tb=>Math.abs(tb-bin)<=1);const boost=isTone?1.4:1;cx.fillStyle=`rgb(${Math.min(255,(v*col[0]*boost)|0)},${Math.min(255,(v*col[1]*boost)|0)},${Math.min(255,(v*col[2]*boost)|0)})`;cx.fillRect(w-3,y,3,1)}cx.fillStyle='rgba(255,255,255,0.04)';for(const tb of toneBins){const y=h*(1-(tb-fLo)/fR);cx.fillRect(w-60,y,60,1)}this.anim=requestAnimationFrame(drawViz)};
+    this.anim=requestAnimationFrame(drawViz);
+    log(`RX started: SR=${sr}, sps=${sps}, tones=${chs.map(c=>c.tones.join('/')).join(' | ')}`);
+  }
+  stop(){this.on=false;if(this.stream){this.stream.getTracks().forEach(t=>t.stop());this.stream=null}if(this.proc){this.proc.disconnect();this.proc=null}if(this.anim){cancelAnimationFrame(this.anim);this.anim=null}}
+}
+
+// ═══════ MIC ═══════
+let micRes=null;
+function showMic(){$('micO').classList.add('show');return new Promise(r=>{micRes=r})}
+function closeMic(){$('micO').classList.remove('show');if(micRes){micRes(false);micRes=null}}
+async function reqMic(){$('micO').classList.remove('show');try{const s=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}});s.getTracks().forEach(t=>t.stop());if(micRes){micRes(true);micRes=null}}catch(e){alert('마이크 권한 거부됨');if(micRes){micRes(false);micRes=null}}}
+async function ensMic(){try{const p=await navigator.permissions.query({name:'microphone'});if(p.state==='granted')return true}catch(e){}return await showMic()}
+
+// ═══════ MUTEX ═══════
+function lockTx(){$('rxBtn').disabled=true;$('frxBtn').disabled=true}
+function unlockTx(){if(!rxInst.text)$('rxBtn').disabled=false;if(!rxInst.file)$('frxBtn').disabled=false}
+function lockRx(){$('txBtn').disabled=true;$('ftxBtn').disabled=true}
+function unlockRx(){$('txBtn').disabled=false;if(fData)$('ftxBtn').disabled=false}
+
+// ═══════ RX LOG ═══════
+function addEntry(logId,emptyId,text,ok,meta){
+  const em=$(emptyId);if(em)em.remove();
+  const e=document.createElement('div');e.className='rx-entry '+(ok?'ok':'fail');
+  e.innerHTML=`<span class="rx-time">${new Date().toLocaleTimeString('ko',{hour12:false})}</span><span class="rx-text">${text.replace(/</g,'&lt;')}</span><span class="rx-meta">${meta}</span>`;
+  $(logId).appendChild(e);$(logId).scrollTop=$(logId).scrollHeight;
+  if(ok)rxCount++;$('s_rn').textContent=rxCount;
+}
+
+// ═══════ TX ═══════
+function updStats(){
+  const text=$('txIn').value,orig=new TextEncoder().encode(text).length,comp=compress(text);
+  const pl=orig>0?buildPayload(0x01,comp,''):new Uint8Array(0);
+  const ds=Math.ceil(pl.length/C.nCh)*4;
+  const ts=PRE_SYMS+SYNC_PAT.length+LEN_SYMS+ds+4;
+  const dur=ts/C.baud,bps=orig>0?Math.round(orig*8/dur):0;
+  $('s_to').textContent=orig;$('s_tc').textContent=comp.length;
+  $('s_tt').textContent=orig>0?`${dur.toFixed(1)}s ~${bps}bps`:'-';
+}
+$('txIn').addEventListener('input',updStats);
+
+async function doTxText(){
+  const text=$('txIn').value;if(!text||txBusy)return;
+  $('txBtn').disabled=true;$('txBtn').textContent='■ 전송 중...';$('txD').classList.add('on');lockTx();
+  const comp=compress(text),pl=buildPayload(0x01,comp,'');
+  log(`TX text: orig=${new TextEncoder().encode(text).length}B comp=${comp.length}B pl=${pl.length}B`);
+  await transmit(pl,{cid:'txC',prog:p=>$('txPg').style.width=(p*100)+'%',status:m=>$('txS').textContent=m});
+  $('txBtn').disabled=false;$('txBtn').textContent='▶ 전송';$('txD').classList.remove('on');unlockTx();
+}
+
+// ═══════ RX TOGGLE ═══════
+let rxInst={text:null,file:null},rxFileBlob=null,rxFileName='';
+
+function resetRx(k){
+  const p=k==='text'?'':'f';
+  $(p+'rxBtn').textContent='● 수신 시작';$(p+'rxBtn').className='btn brc';$(p+'rxBtn').disabled=false;
+  $(p+'rxD').classList.remove('onr');$(p+'rxS').textContent='대기 중';$(p+'rxPg').style.width='0%';
+  if(k==='text'){$('s_rb').textContent='0';$('s_rd').textContent='0';$('s_re').textContent='0'}
+  else{$('s_fb').textContent='0';$('s_fd').textContent='0';$('s_fe2').textContent='0'}
+}
+
+async function togRx(k){
+  const p=k==='text'?'':'f',btn=p+'rxBtn',dot=p+'rxD',stat=p+'rxS';
+  const logId=k==='text'?'rxLog':'frxLog',emId=k==='text'?'rxEmpty':'frxEmpty';
+  if(rxInst[k]){rxInst[k].stop();rxInst[k]=null;resetRx(k);unlockRx();return}
+  if(!await ensMic())return;
+  lockRx();$(btn).textContent='■ 수신 중지';$(btn).className='btn bst';$(dot).classList.add('onr');$(stat).textContent='수신 대기 중...';$(p+'rxPg').style.width='0%';
+  if(k==='file')$('frxDL').style.display='none';
+
+  rxInst[k]=new Rx({
+    cid:k==='text'?'rxC':'frxC',
+    status:m=>$(stat).textContent=m,
+    prog:p2=>$(p+'rxPg').style.width=(p2*100)+'%',
+    bytes:b=>$(k==='text'?'s_rb':'s_fb').textContent=b,
+    errors:e=>$(k==='text'?'s_re':'s_fe2').textContent=e,
+    complete:(pkt,errs,raw)=>{
+      if(!pkt){addEntry(logId,emId,'⚠ 패킷 파싱 실패',false,`err=${errs} hex=[${hexDump(raw,16)}]`);return}
+      if(k==='text'||pkt.type===1){
+        if(pkt.crcOk){const dec=new TextDecoder().decode(decompress(pkt.data));addEntry(logId,emId,dec,true,`${new TextEncoder().encode(dec).length}B, err=${errs}, CRC OK`);$('s_rd').textContent=new TextEncoder().encode(dec).length;$(stat).textContent=`수신 완료 ✓ (에러 ${errs})`;log(`RX OK: "${dec.slice(0,80)}"`)}
+        else{let dt='(디코딩 실패)';try{dt=new TextDecoder().decode(decompress(pkt.data))}catch{}addEntry(logId,emId,dt+'\n⚠ CRC 불일치',false,`err=${errs} hex=[${hexDump(raw,16)}]`);$(stat).textContent=`CRC 오류 (에러 ${errs})`}
+      } else if(pkt.type===2){
+        const fd=decompress(pkt.data);rxFileBlob=new Blob([fd]);rxFileName=pkt.name||'received';
+        $('s_fd').textContent=fmtSz(fd.length);
+        addEntry(logId,emId,pkt.crcOk?`✅ ${rxFileName} (${fmtSz(fd.length)})`:`⚠ ${rxFileName} CRC오류`,pkt.crcOk,`err=${errs}`);
+        $('frxDL').style.display='flex';
+      }
+    }
+  });
+  try{await rxInst[k].start()}catch(e){rxInst[k]=null;resetRx(k);$(stat).textContent='마이크 실패';unlockRx()}
+}
+
+// ═══════ FILE TX ═══════
+let fData=null,fName2='';
+function fmtSz(b){return b<1024?b+'B':b<1048576?(b/1024).toFixed(1)+'KB':(b/1048576).toFixed(2)+'MB'}
+function onFile(e){const f=e.target.files[0];if(!f)return;fName2=f.name;const r=new FileReader();r.onload=ev=>{fData=new Uint8Array(ev.target.result);$('fI').style.display='block';$('fN').textContent=f.name;$('fSz').textContent=' — '+fmtSz(fData.length);$('ftxBtn').disabled=false;const comp=compress(fData),pl=buildPayload(0x02,comp,f.name);const ds=Math.ceil(pl.length/C.nCh)*4;const ts=PRE_SYMS+SYNC_PAT.length+LEN_SYMS+ds+4;$('s_fo').textContent=fmtSz(fData.length);$('s_fc').textContent=fmtSz(comp.length);$('s_fe').textContent=(ts/C.baud).toFixed(1)+'s';$('ftxS').textContent='전송 준비'};r.readAsArrayBuffer(f)}
+const dz=$('fDrop');dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('dv')});dz.addEventListener('dragleave',()=>dz.classList.remove('dv'));dz.addEventListener('drop',e=>{e.preventDefault();dz.classList.remove('dv');const f=e.dataTransfer.files[0];if(f){const dt=new DataTransfer();dt.items.add(f);$('fIn').files=dt.files;onFile({target:{files:[f]}})}});
+async function doTxFile(){if(!fData||txBusy)return;$('ftxBtn').disabled=true;$('ftxBtn').textContent='■ 전송 중...';$('ftxD').classList.add('on');lockTx();const comp=compress(fData),pl=buildPayload(0x02,comp,fName2);log(`TX file: ${fName2} ${fData.length}B→${comp.length}B pl=${pl.length}B`);await transmit(pl,{cid:'ftxC',prog:p=>$('ftxPg').style.width=(p*100)+'%',status:m=>$('ftxS').textContent=m});$('ftxBtn').disabled=false;$('ftxBtn').textContent='▶ 파일 전송';$('ftxD').classList.remove('on');unlockTx()}
+function dlFile(){if(!rxFileBlob)return;const u=URL.createObjectURL(rxFileBlob),a=document.createElement('a');a.href=u;a.download=rxFileName;document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(u)}
+
+cfgChg();
+</script>
+</body>
+</html>
