@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SonicLink v9</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
+:root{--bg:#060a12;--sf:#0c1424;--sf2:#13203a;--bd:#1a2d4a;--a1:#00ffa8;--a2:#00d4ff;--a3:#b490ff;--a4:#ffb020;--adim:rgba(0,255,168,.1);--dng:#ff4d6a;--wrn:#f5a623;--tx:#c9d1d9;--td:#4a5a72;--tb:#f2f6ff;--mono:'JetBrains Mono',monospace;--sans:'Noto Sans KR',sans-serif}
+*{margin:0;padding:0;box-sizing:border-box}body{background:var(--bg);color:var(--tx);font-family:var(--sans);min-height:100vh}
+body::before{content:'';position:fixed;inset:0;background:linear-gradient(rgba(0,255,168,.012) 1px,transparent 1px),linear-gradient(90deg,rgba(0,255,168,.012) 1px,transparent 1px);background-size:50px 50px;pointer-events:none}
+.ctn{position:relative;z-index:1;max-width:960px;margin:0 auto;padding:14px 12px 36px}
+.hdr{text-align:center;margin-bottom:12px}.logo{font-family:var(--mono);font-size:24px;font-weight:700;background:linear-gradient(135deg,var(--a1),var(--a2),var(--a3));-webkit-background-clip:text;-webkit-text-fill-color:transparent}.sub{font-size:8px;color:var(--td);font-family:var(--mono);letter-spacing:2px;margin-top:1px}
+.tags{display:flex;gap:3px;justify-content:center;margin-top:5px;flex-wrap:wrap}.tag{font-family:var(--mono);font-size:7px;padding:2px 6px;border-radius:3px;border:1px solid var(--bd);color:var(--a2)}
+.tabs{display:flex;border-bottom:1px solid var(--bd);margin-bottom:10px}.tab{flex:1;padding:8px;text-align:center;font-family:var(--mono);font-size:10px;color:var(--td);cursor:pointer;border-bottom:2px solid transparent}.tab:hover{color:var(--tx)}.tab.on{color:var(--a1);border-color:var(--a1)}.tc{display:none}.tc.on{display:block}
+.cfg{background:var(--sf);border:1px solid var(--bd);border-radius:9px;padding:10px 12px;margin-bottom:10px}.cfg-r{display:flex;gap:7px;flex-wrap:wrap;align-items:center}.cg{display:flex;align-items:center;gap:4px;font-family:var(--mono);font-size:9px;color:var(--td)}.cg select{background:var(--bg);border:1px solid var(--bd);color:var(--tx);font-family:var(--mono);font-size:9px;padding:3px 5px;border-radius:4px;outline:none}.cg input[type=range]{width:55px;accent-color:var(--a1)}.cg button{background:var(--sf2);border:1px solid var(--bd);color:var(--a4);font-family:var(--mono);font-size:9px;padding:3px 8px;border-radius:4px;cursor:pointer}
+.cfg-warn{font-family:var(--mono);font-size:8px;color:var(--wrn);margin-top:5px;padding:4px 7px;background:rgba(245,166,35,.06);border:1px solid rgba(245,166,35,.12);border-radius:4px;line-height:1.4}
+.cfg-info{font-family:var(--mono);font-size:8px;color:var(--a2);margin-top:3px}.bm{margin-top:5px;border-top:1px solid var(--bd);padding-top:5px}.bm-t{font-family:var(--mono);font-size:7px;color:var(--td);letter-spacing:2px;margin-bottom:3px}.bm-r{display:flex;gap:2px}.bm-b{flex:1;height:13px;border-radius:3px;font-family:var(--mono);font-size:6px;color:rgba(255,255,255,.7);display:flex;align-items:center;justify-content:center}.cfg-id{font-family:var(--mono);font-size:8px;color:var(--a3);margin-top:3px}
+.pnls{display:grid;grid-template-columns:1fr 1fr;gap:10px}@media(max-width:700px){.pnls{grid-template-columns:1fr}}
+.pnl{background:var(--sf);border:1px solid var(--bd);border-radius:10px;padding:12px;position:relative;overflow:hidden}.pnl::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--a1),transparent);opacity:.4}.pnl.rx::before{background:linear-gradient(90deg,transparent,var(--a2),transparent)}
+.pt{font-family:var(--mono);font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:2px;color:var(--a1);margin-bottom:7px}.pnl.rx .pt{color:var(--a2)}
+textarea.inp{width:100%;min-height:65px;background:var(--bg);border:1px solid var(--bd);border-radius:6px;padding:7px;color:var(--tb);font-family:var(--mono);font-size:11px;line-height:1.5;resize:vertical;outline:none}textarea.inp:focus{border-color:var(--a1)}textarea.inp::placeholder{color:var(--td)}
+.rx-log{width:100%;min-height:65px;max-height:200px;overflow-y:auto;background:var(--bg);border:1px solid var(--bd);border-radius:6px;padding:3px}
+.rx-e{padding:5px 6px;margin:2px 0;border-radius:4px;font-family:var(--mono);font-size:10px;line-height:1.4;word-break:break-all;white-space:pre-wrap}.rx-e.ok{background:rgba(0,255,168,.06);border-left:3px solid var(--a1)}.rx-e.fail{background:rgba(255,77,106,.06);border-left:3px solid var(--dng)}.rx-e .t{font-size:7px;color:var(--td);display:block}.rx-e .v{color:var(--tb)}.rx-e .m{font-size:7px;color:var(--td);margin-top:1px;display:block}
+.rx-empty{padding:8px;text-align:center;font-family:var(--mono);font-size:10px;color:var(--td)}.rx-clr{font-family:var(--mono);font-size:7px;color:var(--td);cursor:pointer;text-align:right;margin-top:2px}
+.fdrop{border:2px dashed var(--bd);border-radius:7px;padding:14px 8px;text-align:center;cursor:pointer;background:var(--bg)}.fdrop:hover,.fdrop.dv{border-color:var(--a1);background:var(--adim)}.fdrop .ic{font-size:18px}.fdrop .lb{font-family:var(--mono);font-size:9px;color:var(--td);margin-top:2px}
+.fi{margin-top:5px;padding:5px 8px;background:var(--sf2);border-radius:5px;border:1px solid var(--bd);font-family:var(--mono);font-size:9px;display:none}.fi .fn{color:var(--a1);font-weight:600}
+.br{display:flex;gap:5px;margin-top:6px}.btn{flex:1;padding:8px 8px;border:none;border-radius:6px;font-family:var(--mono);font-size:10px;font-weight:600;cursor:pointer;transition:.2s;display:flex;align-items:center;justify-content:center;gap:3px}
+.bt{background:linear-gradient(135deg,var(--a1),#00c98a);color:var(--bg)}.bt:hover{box-shadow:0 2px 12px rgba(0,255,168,.3);transform:translateY(-1px)}.bt:disabled{opacity:.3;cursor:not-allowed;transform:none;box-shadow:none}
+.brc{background:linear-gradient(135deg,var(--a2),#0098b0);color:var(--bg)}.brc:hover{box-shadow:0 2px 12px rgba(0,212,255,.3)}.brc:disabled{opacity:.3;cursor:not-allowed;transform:none;box-shadow:none}.bst{background:var(--dng);color:#fff}
+.bdl{background:var(--a3);color:#fff;margin-top:4px;display:none}
+.sts{display:flex;gap:6px;margin-top:5px;flex-wrap:wrap}.st{font-family:var(--mono);font-size:8px;color:var(--td)}.st b{color:var(--a1);font-weight:500}.pnl.rx .st b{color:var(--a2)}
+.pb{height:3px;background:var(--bd);border-radius:2px;margin-top:5px;overflow:hidden}.pf{height:100%;background:linear-gradient(90deg,var(--a1),var(--a2));border-radius:2px;width:0%;transition:width .1s}
+.sl{font-family:var(--mono);font-size:8px;color:var(--td);margin-top:4px;display:flex;align-items:center;gap:4px;min-height:10px}.sd{width:5px;height:5px;border-radius:50%;background:var(--td);flex-shrink:0}.sd.on{background:var(--a1);box-shadow:0 0 6px var(--a1);animation:p 1s infinite}.sd.onr{background:var(--a2);box-shadow:0 0 6px var(--a2);animation:p 1s infinite}@keyframes p{0%,100%{opacity:1}50%{opacity:.3}}
+.viz{margin-top:5px;height:85px;background:var(--bg);border-radius:6px;border:1px solid var(--bd);overflow:hidden;position:relative}.viz canvas{width:100%;height:100%;display:block}.viz-lb{position:absolute;bottom:1px;right:4px;font-family:var(--mono);font-size:6px;color:var(--td);pointer-events:none}
+.mo{display:none;position:fixed;inset:0;z-index:100;background:rgba(6,10,18,.9);backdrop-filter:blur(6px);align-items:center;justify-content:center}.mo.show{display:flex}.mdlg{background:var(--sf);border:1px solid var(--bd);border-radius:12px;padding:20px;max-width:330px;text-align:center}.mdlg .mi{font-size:30px;margin-bottom:4px}.mdlg h3{font-family:var(--mono);font-size:12px;color:var(--tb);margin-bottom:3px}.mdlg p2{font-size:10px;color:var(--td);line-height:1.5;margin-bottom:8px;display:block}.mdlg .ms{text-align:left;font-size:9px;color:var(--tx);line-height:1.6;background:var(--bg);border-radius:5px;padding:7px 10px;margin-bottom:10px;font-family:var(--mono)}.mr{display:flex;gap:5px}.mb{flex:1;padding:8px;border:none;border-radius:6px;font-family:var(--mono);font-size:10px;font-weight:600;cursor:pointer}.mba{background:var(--a2);color:var(--bg)}.mbc{background:var(--sf2);color:var(--td);border:1px solid var(--bd)}
+.dbg-t{font-family:var(--mono);font-size:7px;color:var(--td);cursor:pointer;margin-top:6px;text-align:center}.dbg{display:none;margin-top:3px;padding:5px;background:var(--bg);border:1px solid var(--bd);border-radius:5px;font-family:var(--mono);font-size:7px;color:var(--td);max-height:160px;overflow-y:auto;line-height:1.5;white-space:pre-wrap}.dbg.show{display:block}
+</style>
+</head>
+<body>
+<div class="mo" id="micO"><div class="mdlg"><div class="mi">🎙️</div><h3>마이크 권한</h3><span class="p2">음파 수신에 마이크 접근이 필요합니다.</span><div class="ms">📱 모바일: 팝업 → 허용<br>💻 PC: 주소창 🔒 → 마이크</div><div class="mr"><button class="mb mbc" onclick="closeMic()">취소</button><button class="mb mba" onclick="reqMic()">허용</button></div></div></div>
+<div class="ctn">
+<div class="hdr"><div class="logo">⟨ SonicLink v9 ⟩</div><div class="sub">RS-FEC ACOUSTIC MODEM</div>
+<div class="tags"><span class="tag">RS-FEC</span><span class="tag">4-FSK</span><span class="tag">Interleave</span><span class="tag">LZ77</span><span class="tag">CRC-16</span><span class="tag">3×LEN</span></div></div>
+<div class="tabs"><div class="tab on" onclick="swTab('text')">📝 텍스트</div><div class="tab" onclick="swTab('file')">📁 파일</div></div>
+<div class="cfg">
+  <div class="cfg-r">
+    <div class="cg"><span>대역</span><select id="selMode" onchange="cfgChg()"><option value="mid" selected>비간섭 5.5-8k</option><option value="ultra">준초음파 12-16k</option></select></div>
+    <div class="cg"><span>채널</span><select id="selCh" onchange="cfgChg()"><option value="1" selected>1ch</option><option value="2">2ch</option></select></div>
+    <div class="cg"><span>속도</span><select id="selBd" onchange="cfgChg()"><option value="25" selected>25bd</option><option value="40">40bd</option></select></div>
+    <div class="cg"><span>RS</span><select id="selRS" onchange="cfgChg()"><option value="8">t=8 강</option><option value="4" selected>t=4</option><option value="2">t=2</option></select></div>
+    <div class="cg"><span>볼륨</span><input type="range" id="selVol" min="0.3" max="1" step="0.05" value="0.95" oninput="cfgChg()"></div>
+    <div class="cg"><button onclick="testTone()">🔊</button></div>
+  </div>
+  <div class="cfg-warn">⚠ 양쪽 설정 동일 | LENGTH 3중 전송 | 헤더 없음 — RS가 전체 데이터 보호</div>
+  <div class="cfg-info" id="cfgInfo"></div>
+  <div class="bm"><div class="bm-t">TONES</div><div class="bm-r" id="bmRow"></div></div>
+  <div class="cfg-id" id="cfgId"></div>
+</div>
+<div class="tc on" id="tc-text"><div class="pnls" style="margin-top:6px">
+  <div class="pnl tx"><div class="pt">📡 TX</div>
+    <textarea class="inp" id="txIn" placeholder="전송할 텍스트..."></textarea>
+    <div class="sts"><div class="st">원본<b id="s_to">0</b>B</div><div class="st">압축<b id="s_tc">0</b>B</div><div class="st">RS포함<b id="s_tr">0</b>B</div><div class="st"><b id="s_tt">-</b></div></div>
+    <div class="br"><button class="btn bt" id="txBtn" onclick="doTx('text')">▶ 전송</button></div>
+    <div class="pb"><div class="pf" id="txPg"></div></div><div class="sl"><span class="sd" id="txD"></span><span id="txS">대기</span></div>
+    <div class="viz"><canvas id="txC"></canvas><div class="viz-lb">WAVEFORM</div></div>
+  </div>
+  <div class="pnl rx"><div class="pt">📻 RX</div>
+    <div class="rx-log" id="rxLog"><div class="rx-empty" id="rxE">—</div></div>
+    <div class="rx-clr" onclick="$('rxLog').innerHTML='<div class=rx-empty>—</div>'">✕ 지우기</div>
+    <div class="sts"><div class="st">수신<b id="s_rb">0</b>B</div><div class="st">RS복구<b id="s_rf">0</b></div><div class="st">에러<b id="s_re">0</b></div><div class="st">횟수<b id="s_rn">0</b></div></div>
+    <div class="br"><button class="btn brc" id="rxBtn" onclick="togRx('text')">● 수신</button></div>
+    <div class="pb"><div class="pf" id="rxPg"></div></div><div class="sl"><span class="sd" id="rxD"></span><span id="rxS">대기</span></div>
+    <div class="viz"><canvas id="rxC"></canvas><div class="viz-lb">SPECTRUM</div></div>
+  </div>
+</div></div>
+<div class="tc" id="tc-file"><div class="pnls" style="margin-top:6px">
+  <div class="pnl tx"><div class="pt">📡 FILE TX</div>
+    <div class="fdrop" id="fDrop" onclick="$('fIn').click()"><div class="ic">📎</div><div class="lb">파일 선택 (10KB↓)</div></div>
+    <input type="file" id="fIn" style="display:none" onchange="onFile(event)">
+    <div class="fi" id="fI"><span class="fn" id="fN"></span><span id="fSz"></span></div>
+    <div class="sts"><div class="st">원본<b id="s_fo">0</b></div><div class="st">RS포함<b id="s_fc">0</b></div><div class="st"><b id="s_fe">-</b></div></div>
+    <div class="br"><button class="btn bt" id="ftxBtn" onclick="doTx('file')" disabled>▶ 파일 전송</button></div>
+    <div class="pb"><div class="pf" id="ftxPg"></div></div><div class="sl"><span class="sd" id="ftxD"></span><span id="ftxS">파일 필요</span></div>
+    <div class="viz"><canvas id="ftxC"></canvas><div class="viz-lb">WAVEFORM</div></div>
+  </div>
+  <div class="pnl rx"><div class="pt">📻 FILE RX</div>
+    <div class="rx-log" id="frxLog"><div class="rx-empty" id="frxE">—</div></div>
+    <div class="sts"><div class="st">수신<b id="s_fb">0</b>B</div><div class="st">RS<b id="s_ff">0</b></div><div class="st">에러<b id="s_fe2">0</b></div></div>
+    <div class="br"><button class="btn brc" id="frxBtn" onclick="togRx('file')">● 수신</button></div>
+    <button class="btn bdl" id="frxDL" onclick="dlFile()">💾 다운로드</button>
+    <div class="pb"><div class="pf" id="frxPg"></div></div><div class="sl"><span class="sd" id="frxD"></span><span id="frxS">대기</span></div>
+    <div class="viz"><canvas id="frxC"></canvas><div class="viz-lb">SPECTRUM</div></div>
+  </div>
+</div></div>
+<div class="dbg-t" onclick="$('dbg').classList.toggle('show')">▼ 디버그</div>
+<div class="dbg" id="dbg"></div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+
+/*═══ REED-SOLOMON GF(256) ═══*/
+const GF={exp:new Uint8Array(512),log:new Int16Array(256)};
+(function(){let x=1;for(let i=0;i<255;i++){GF.exp[i]=x;GF.log[x]=i;x<<=1;if(x&0x100)x^=0x11d}for(let i=255;i<512;i++)GF.exp[i]=GF.exp[i-255];GF.log[0]=-1})();
+function gfM(a,b){return(!a||!b)?0:GF.exp[GF.log[a]+GF.log[b]]}
+function gfD(a,b){return!a?0:GF.exp[(GF.log[a]-GF.log[b]+255)%255]}
+function gfP(a,n){return!a?0:GF.exp[(GF.log[a]*n)%255]}
+function polyMul(p,q){const r=new Array(p.length+q.length-1).fill(0);for(let i=0;i<p.length;i++)for(let j=0;j<q.length;j++)r[i+j]^=gfM(p[i],q[j]);return r}
+function polyEval(p,x){let y=p[0];for(let i=1;i<p.length;i++)y=gfM(y,x)^p[i];return y}
+function rsGenPoly(ns){let g=[1];for(let i=0;i<ns;i++)g=polyMul(g,[1,gfP(2,i)]);return g}
+function rsEncode(msg,ns){const gen=rsGenPoly(ns),enc=[...msg,...new Array(ns).fill(0)];for(let i=0;i<msg.length;i++){const c=enc[i];if(c)for(let j=1;j<gen.length;j++)enc[i+j]^=gfM(gen[j],c)}return[...msg,...enc.slice(msg.length)]}
+function rsDecode(data,ns){
+  const msg=[...data];const synd=[];let hasErr=false;
+  for(let i=0;i<ns;i++){synd[i]=polyEval(msg,gfP(2,i));if(synd[i])hasErr=true}
+  if(!hasErr)return{data:msg.slice(0,-ns),corrected:0,ok:true};
+  let errLoc=[1],oldLoc=[1];
+  for(let i=0;i<ns;i++){
+    let delta=synd[i];for(let j=1;j<errLoc.length;j++)delta^=gfM(errLoc[errLoc.length-1-j],synd[i-j]||0);
+    oldLoc=[...oldLoc,0];
+    if(delta){if(oldLoc.length>errLoc.length){const nL=oldLoc.map(v=>gfM(v,delta));oldLoc=errLoc.map(v=>gfM(v,gfD(1,delta)));errLoc=nL}
+    for(let j=0;j<oldLoc.length;j++)errLoc[errLoc.length-1-j]^=gfM(delta,oldLoc[oldLoc.length-1-j])}
+  }
+  while(errLoc.length>1&&!errLoc[0])errLoc.shift();
+  const nerr=errLoc.length-1;if(nerr*2>ns)return{data:msg.slice(0,-ns),corrected:-1,ok:false};
+  const pos=[];for(let i=0;i<msg.length;i++)if(!polyEval(errLoc,gfP(2,i)))pos.push(msg.length-1-i);
+  if(pos.length!==nerr)return{data:msg.slice(0,-ns),corrected:-1,ok:false};
+  const sp=[0,...synd];const omega=polyMul(sp,errLoc).slice(-(ns+1));
+  const dlam=[];for(let i=0;i<errLoc.length;i++)if(i%2===1)dlam.push(errLoc[i]);else if(i>0)dlam.push(0);
+  if(!dlam.length)dlam.push(0);
+  for(const p of pos){const Xi=gfP(2,msg.length-1-p),Xi2=gfD(1,Xi);const ov=polyEval(omega,Xi2),dv=polyEval(dlam,Xi2);if(dv)msg[p]^=gfM(Xi,gfD(ov,dv))}
+  return{data:msg.slice(0,-ns),corrected:nerr,ok:true};
+}
+
+/*═══ INTERLEAVE ═══*/
+function interleave(d,bs){const nb=Math.ceil(d.length/bs);const pd=[...d];while(pd.length<nb*bs)pd.push(0);const o=new Array(pd.length);for(let i=0;i<pd.length;i++){const r=i%nb,c=Math.floor(i/nb);o[r*bs+c]=pd[i]}return o}
+function deinterleave(d,bs){const nb=Math.ceil(d.length/bs);const o=new Array(d.length);for(let i=0;i<d.length;i++){const r=i%nb,c=Math.floor(i/nb);const si=r*bs+c;o[i]=si<d.length?d[si]:0}return o}
+
+/*═══ RS PIPELINE — NO EXTERNAL HEADER ═══*/
+/*
+  TX: pktBytes → prepend [origLen 2B] → RS encode (fixed blockLen=255) → interleave → flat
+  RX: flat → deinterleave → RS decode → extract origLen → pktBytes
+  
+  The ONLY thing transmitted outside RS is the flat byte count (LENGTH field),
+  which is sent 3× with majority vote.
+*/
+function rsEncodeAll(pktBytes,rsT){
+  const ns=rsT*2,maxD=255-ns;
+  // Prepend original length (RS-protected)
+  const withLen=[(pktBytes.length>>8)&0xFF,pktBytes.length&0xFF,...pktBytes];
+  const blocks=[];
+  for(let i=0;i<withLen.length;i+=maxD){
+    const chunk=withLen.slice(i,Math.min(i+maxD,withLen.length));
+    // Pad chunk to maxD for uniform block size
+    while(chunk.length<maxD)chunk.push(0);
+    blocks.push(rsEncode(chunk,ns));
+  }
+  const flat=blocks.flat();
+  return{encoded:interleave(flat,255),nBlocks:blocks.length};
+}
+
+function rsDecodeAll(encoded,rsT){
+  const ns=rsT*2,nBlocks=Math.ceil(encoded.length/255);
+  const deint=deinterleave(encoded,255);
+  let totalCorr=0,failed=false;const decoded=[];
+  for(let i=0;i<nBlocks;i++){
+    const block=deint.slice(i*255,(i+1)*255);
+    if(block.length<ns+1){decoded.push(...block);continue}
+    const r=rsDecode(block,ns);
+    if(r.ok){decoded.push(...r.data);if(r.corrected>0)totalCorr+=r.corrected}
+    else{decoded.push(...r.data);failed=true;totalCorr=-1}
+  }
+  // Extract origLen
+  if(decoded.length<2)return{data:[],corrected:totalCorr,ok:false};
+  const origLen=(decoded[0]<<8)|decoded[1];
+  return{data:decoded.slice(2,2+origLen),corrected:totalCorr,ok:!failed};
+}
+
+/*═══ COMPRESS, CRC, PACKET ═══*/
+function compress(inp){const b=(inp instanceof Uint8Array)?inp:new TextEncoder().encode(inp);if(!b.length)return new Uint8Array(0);const o=[];let i=0;while(i<b.length){let bl=0,bd=0;const md=Math.min(i,255),ml=Math.min(b.length-i,31);for(let d=1;d<=md;d++){let l=0;while(l<ml&&b[i+l]===b[i-d+(l%d)])l++;if(l>bl&&l>=3){bl=l;bd=d}}if(bl>=3){o.push(0xFE,bd,bl);i+=bl}else{if(b[i]===0xFE)o.push(0xFE,0,0);else o.push(b[i]);i++}}return new Uint8Array(o)}
+function decompress(d){if(!d||!d.length)return new Uint8Array(0);const o=[];let i=0;while(i<d.length){if(d[i]===0xFE){i++;if(i+1>=d.length)break;const x=d[i++],y=d[i++];if(!x&&!y)o.push(0xFE);else for(let j=0;j<y;j++)o.push(o[o.length-x])}else o.push(d[i++])}return new Uint8Array(o)}
+function crc16(d){let c=0xFFFF;for(let i=0;i<d.length;i++){c^=d[i];for(let j=0;j<8;j++)c=(c&1)?((c>>1)^0xA001):(c>>1)}return c&0xFFFF}
+function buildPkt(type,data,name){const nb=name?new TextEncoder().encode(name.slice(0,60)):new Uint8Array(0);const body=new Uint8Array(1+1+nb.length+data.length);body[0]=type;body[1]=nb.length;if(nb.length)body.set(nb,2);body.set(data,2+nb.length);const crc=crc16(body);const pkt=new Uint8Array(body.length+2);pkt.set(body);pkt[body.length]=(crc>>8)&0xFF;pkt[body.length+1]=crc&0xFF;return pkt}
+function parsePkt(bytes){if(bytes.length<4)return null;const type=bytes[0],nLen=bytes[1];if(type!==1&&type!==2)return null;if(nLen>60||2+nLen>bytes.length-2)return null;const name=nLen>0?new TextDecoder().decode(new Uint8Array(bytes.slice(2,2+nLen))):'';const data=bytes.slice(2+nLen,bytes.length-2);const rc=(bytes[bytes.length-2]<<8)|bytes[bytes.length-1];const cc=crc16(new Uint8Array(bytes.slice(0,bytes.length-2)));return{type,name,data:new Uint8Array(data),crcOk:rc===cc}}
+
+/*═══ MODEM CONFIG ═══*/
+const TONES=4,PRE_SYMS=30,SYNC_PAT=[1,2,2,1,2,1];
+// LENGTH sent 3× for majority vote = 24 symbols
+const BANDS={mid:{lo:5500,hi:8000},ultra:{lo:12000,hi:16000}};
+let C={mode:'mid',nCh:1,baud:25,vol:0.95,rsT:4};
+let actx=null,txBusy=false,rxCount=0;
+function log(m){const e=$('dbg'),t=new Date().toLocaleTimeString('ko',{hour12:false});e.textContent+=`[${t}] ${m}\n`;e.scrollTop=e.scrollHeight}
+function hex(b,n){return Array.from((b||[]).slice(0,n||16)).map(x=>(x||0).toString(16).padStart(2,'0')).join(' ')}
+
+function allocTones(){const b=BANDS[C.mode],bw=b.hi-b.lo,chBW=Math.floor(bw/C.nCh);const gap=Math.floor((chBW-100)/TONES),chs=[];for(let c=0;c<C.nCh;c++){const base=b.lo+c*chBW+50;const tones=[];for(let t=0;t<TONES;t++)tones.push(base+t*gap);chs.push({base,tones,gap,hi:tones[3]+gap/2})}return chs}
+function cfgChg(){
+  C.mode=$('selMode').value;C.nCh=+$('selCh').value;C.baud=+$('selBd').value;C.vol=+$('selVol').value;C.rsT=+$('selRS').value;
+  const bw=BANDS[C.mode].hi-BANDS[C.mode].lo;while(C.nCh>1&&Math.floor((bw/C.nCh-100)/TONES)<100){C.nCh--;$('selCh').value=C.nCh}
+  const chs=allocTones(),cls=['#00ffa8','#00d4ff'];const r=$('bmRow');r.innerHTML='';
+  chs.forEach((ch,i)=>{const d=document.createElement('div');d.className='bm-b';d.style.background=cls[i%2]+'30';d.style.border='1px solid '+cls[i%2]+'55';d.textContent=`CH${i+1}: ${ch.tones.map(f=>(f/1e3).toFixed(1)).join('/')}k`;d.style.fontSize='6px';r.appendChild(d)});
+  $('cfgId').textContent=`${C.mode.toUpperCase()}-${C.nCh}CH-${C.baud}BD-RS${C.rsT}`;
+  $('cfgInfo').textContent=`톤간격${chs[0].gap}Hz | ${C.nCh*2*C.baud}bps | RS최대${C.rsT}바이트복구`;updStats();
+}
+function swTab(t){document.querySelectorAll('.tab').forEach((e,i)=>e.classList.toggle('on',(i===0&&t==='text')||(i===1&&t==='file')));$('tc-text').classList.toggle('on',t==='text');$('tc-file').classList.toggle('on',t==='file')}
+function testTone(){const ctx=getCtx(),chs=allocTones();for(const ch of chs)for(const f of ch.tones){const o=ctx.createOscillator(),g=ctx.createGain();o.frequency.value=f;g.gain.value=C.vol*0.06/(chs.length*TONES);o.connect(g);g.connect(ctx.destination);o.start();o.stop(ctx.currentTime+0.3)}log(`TEST: ${chs.map(c=>c.tones.join('/')).join(' | ')}`)}
+function byteToSyms(b){return[(b>>6)&3,(b>>4)&3,(b>>2)&3,b&3]}
+function symsToBytes(s){const b=[];for(let i=0;i+3<s.length;i+=4)b.push(((s[i]&3)<<6)|((s[i+1]&3)<<4)|((s[i+2]&3)<<2)|(s[i+3]&3));return b}
+function getCtx(){if(!actx){actx=new(window.AudioContext||window.webkitAudioContext)({sampleRate:48000});log(`AudioCtx SR=${actx.sampleRate}`)}if(actx.state==='suspended')actx.resume();return actx}
+
+/*═══ TRANSMIT ═══
+  Frame: PRE(30) | SYNC(6) | LEN×3(24) | DATA
+  LEN is total RS-encoded byte count, sent 3 times for majority vote.
+  NO separate header — everything is inside RS.
+*/
+async function transmit(pktBytes,ui){
+  if(txBusy)return;txBusy=true;
+  const ctx=getCtx(),sr=ctx.sampleRate,chs=allocTones();
+  const sps=Math.round(sr/C.baud),ramp=Math.min(Math.floor(sps*0.06),24);
+  const rs=rsEncodeAll(Array.from(pktBytes),C.rsT);
+  const payload=rs.encoded;
+  log(`TX: pkt=${pktBytes.length}B → RS(${rs.nBlocks}blk) → ${payload.length}B`);
+
+  const chB=Array.from({length:C.nCh},()=>[]);
+  for(let i=0;i<payload.length;i++)chB[i%C.nCh].push(payload[i]);
+  const maxB=Math.max(...chB.map(c=>c.length));
+  const chS=chB.map(cb=>{const s=[];for(const b of cb)s.push(...byteToSyms(b));return s});
+  const maxDS=maxB*4;
+
+  // LENGTH: 2 bytes, sent 3× = 24 symbols
+  const lenVal=payload.length;
+  const lenBytes=[(lenVal>>8)&0xFF,lenVal&0xFF];
+  const lenSyms1=[...byteToSyms(lenBytes[0]),...byteToSyms(lenBytes[1])];
+  const lenSyms3=[...lenSyms1,...lenSyms1,...lenSyms1]; // 3×
+
+  const totalS=PRE_SYMS+SYNC_PAT.length+24+maxDS+4;
+  const buf=ctx.createBuffer(1,totalS*sps,sr);
+  const d=buf.getChannelData(0);
+  const amp=(C.vol*0.45)/Math.sqrt(C.nCh);
+
+  function wt(freq,si){const off=si*sps;for(let s=0;s<sps;s++){let a=amp;if(s<ramp)a*=(1-Math.cos(Math.PI*s/ramp))/2;else if(s>sps-ramp)a*=(1-Math.cos(Math.PI*(sps-s)/ramp))/2;if(off+s<d.length)d[off+s]+=a*Math.sin(2*Math.PI*freq*(off+s)/sr)}}
+
+  let si=0;
+  for(let s=0;s<PRE_SYMS;s++,si++)for(let c=0;c<C.nCh;c++)wt(chs[c].tones[s%2===0?0:3],si);
+  for(let s=0;s<SYNC_PAT.length;s++,si++)for(let c=0;c<C.nCh;c++)wt(chs[c].tones[SYNC_PAT[s]],si);
+  for(let s=0;s<24;s++,si++)for(let c=0;c<C.nCh;c++)wt(chs[c].tones[lenSyms3[s]],si);
+  for(let s=0;s<maxDS;s++,si++)for(let c=0;c<C.nCh;c++){const v=s<chS[c].length?chS[c][s]:0;wt(chs[c].tones[v],si)}
+
+  log(`TX: frame=${totalS}sym ${(totalS/C.baud).toFixed(1)}s, LEN=${lenVal}`);
+  const src=ctx.createBufferSource();src.buffer=buf;src.connect(ctx.destination);src.start();
+  const t0=ctx.currentTime,dur=totalS/C.baud;
+  const cv=document.getElementById(ui.cid),cx=cv.getContext('2d');cv.width=cv.offsetWidth*2;cv.height=cv.offsetHeight*2;
+  function anim(){const el=ctx.currentTime-t0,p2=Math.min(el/dur,1);ui.prog(p2);ui.status(`전송${(p2*100)|0}%`);const w=cv.width,h=cv.height;cx.fillStyle='#060a12';cx.fillRect(0,0,w,h);const cs=Math.floor(el*sr),win=sps*6;cx.beginPath();for(let x=0;x<w;x++){const s2=cs-win/2+Math.floor(x*win/w);const v=(s2>=0&&s2<d.length)?d[s2]:0;const y=h/2-v*h*2.5;x===0?cx.moveTo(x,y):cx.lineTo(x,y)}cx.strokeStyle='rgba(0,255,168,.06)';cx.lineWidth=16;cx.stroke();cx.strokeStyle='rgba(0,255,168,.2)';cx.lineWidth=6;cx.stroke();cx.strokeStyle='#00ffa8';cx.lineWidth=1.5;cx.stroke();if(p2<1)requestAnimationFrame(anim)}
+  requestAnimationFrame(anim);
+  return new Promise(r=>{src.onended=()=>{ui.prog(1);ui.status('완료✓');txBusy=false;r()}});
+}
+
+/*═══ RECEIVE ═══*/
+class Rx{
+  constructor(ui){this.ui=ui;this.on=false;this.stream=null;this.proc=null;this.anim=null}
+  async start(){
+    const ctx=getCtx(),sr=ctx.sampleRate,chs=allocTones();
+    this.stream=await navigator.mediaDevices.getUserMedia({audio:{sampleRate:48000,echoCancellation:false,noiseSuppression:false,autoGainControl:false}});
+    this.on=true;const source=ctx.createMediaStreamSource(this.stream);
+    const sps=Math.round(sr/C.baud),bufSz=Math.pow(2,Math.ceil(Math.log2(sps)));
+    this.proc=ctx.createScriptProcessor(bufSz,1,1);
+    const an=ctx.createAnalyser();an.fftSize=8192;an.smoothingTimeConstant=0.15;source.connect(an);
+
+    let state='PRE',preCount=0,syncBuf=[],lenSyms=[],dataSyms=[];
+    let payloadLen=-1,errCnt=0,totalDSN=0;
+    let symBuf=new Float32Array(sps),symIdx=0;
+
+    function goertzel(buf,freq){const N=buf.length,k=Math.round(freq*N/sr),w=2*Math.PI*k/N,co=2*Math.cos(w);let s1=0,s2=0;for(let i=0;i<N;i++){const s0=buf[i]+co*s1-s2;s2=s1;s1=s0}return Math.sqrt(s1*s1+s2*s2-co*s1*s2)/N}
+    function det1(buf,ci){const ch=chs[ci];let mx=0,mt=0;const mg=[];for(let t=0;t<TONES;t++){const m=goertzel(buf,ch.tones[t]);mg.push(m);if(m>mx){mx=m;mt=t}}const rest=mg.filter((_,i)=>i!==mt);const avg=rest.reduce((a,b)=>a+b,0)/rest.length;const snr=avg>0?mx/avg:99;return{tone:mt,mag:mx,snr,ok:snr>1.3&&mx>0.0005}}
+    function detAll(buf){const r=[];for(let c=0;c<C.nCh;c++)r.push(det1(buf,c));return r}
+    function isPre(det){return det.every(d=>d.ok&&(d.tone===0||d.tone===3))}
+    function matchSync(h){if(h.length<SYNC_PAT.length)return false;const s=h.length-SYNC_PAT.length;let m=0;for(let i=0;i<SYNC_PAT.length;i++)if(h[s+i]!==SYNC_PAT[i])m++;return m<=1}
+
+    // Majority vote for LENGTH: 3 copies of 8 symbols each
+    function majorityLen(syms24){
+      const result=[];
+      for(let i=0;i<8;i++){
+        const votes=[0,0,0,0];
+        votes[syms24[i]||0]++;
+        votes[syms24[i+8]||0]++;
+        votes[syms24[i+16]||0]++;
+        let best=0;for(let t=1;t<4;t++)if(votes[t]>votes[best])best=t;
+        result.push(best);
+      }
+      return result;
+    }
+
+    const self=this;
+    this.proc.onaudioprocess=function(e){
+      if(!self.on)return;const inp=e.inputBuffer.getChannelData(0);
+      for(let i=0;i<inp.length;i++){
+        symBuf[symIdx++]=inp[i];if(symIdx<sps)continue;symIdx=0;
+        const det=detAll(symBuf);const t0v=det[0].ok?det[0].tone:-1;
+
+        if(state==='PRE'){
+          if(isPre(det)){preCount++;if(preCount>=10){state='SYNC';syncBuf=[];log('RX: PRE✓→SYNC');self.ui.status('SYNC...')}}
+          else preCount=Math.max(0,preCount-1);
+        }
+        else if(state==='SYNC'){
+          if(t0v===0||t0v===3){/*still pre*/}
+          else if(t0v>=0){syncBuf.push(t0v);if(matchSync(syncBuf)){state='LEN';lenSyms=[];log('RX: SYNC✓→LEN');self.ui.status('LEN...')}}
+          if(syncBuf.length>30){log('RX: SYNC timeout');state='PRE';preCount=0;self.ui.status('대기...')}
+        }
+        else if(state==='LEN'){
+          // Majority vote across channels
+          if(C.nCh>1){const v=[0,0,0,0];for(const d of det)if(d.ok)v[d.tone]++;let b=0;for(let t=1;t<4;t++)if(v[t]>v[b])b=t;lenSyms.push(b)}
+          else{lenSyms.push(t0v>=0?t0v:0);if(t0v<0)errCnt++}
+
+          if(lenSyms.length>=24){
+            const voted=majorityLen(lenSyms);
+            const lb=symsToBytes(voted);
+            payloadLen=(lb[0]<<8)|lb[1];
+            log(`RX: LEN=${payloadLen}B (3×majority)`);
+            if(payloadLen<=0||payloadLen>65535){state='PRE';preCount=0;self.ui.status('대기...')}
+            else{state='DATA';dataSyms=Array.from({length:C.nCh},()=>[]);
+              const bpc=[];for(let c=0;c<C.nCh;c++){let n=Math.floor(payloadLen/C.nCh);if(c<payloadLen%C.nCh)n++;bpc.push(n)}
+              totalDSN=Math.max(...bpc)*4;self.ui.status(`수신 0/${payloadLen}B`)}
+          }
+        }
+        else if(state==='DATA'){
+          for(let c=0;c<C.nCh;c++){dataSyms[c].push(det[c].ok?det[c].tone:det[c].tone);if(!det[c].ok)errCnt++}
+          const sr2=Math.min(...dataSyms.map(s=>s.length));const br=Math.floor(sr2/4)*C.nCh;
+          self.ui.bytes(Math.min(br,payloadLen));self.ui.errors(errCnt);
+          const pct=Math.min(sr2/totalDSN,1);self.ui.prog(pct);
+          self.ui.status(`수신${(pct*100)|0}% ${Math.min(br,payloadLen)}/${payloadLen}B`);
+          if(sr2>=totalDSN)finish();
+        }
+      }
+      const out=e.outputBuffer.getChannelData(0);for(let j=0;j<out.length;j++)out[j]=0;
+    };
+
+    function finish(){
+      state='DONE';
+      const chBA=dataSyms.map(s=>symsToBytes(s));const raw=[];const mx=Math.max(...chBA.map(b=>b.length));
+      for(let i=0;i<mx;i++)for(let c=0;c<C.nCh;c++)if(i<chBA[c].length&&raw.length<payloadLen)raw.push(chBA[c][i]);
+
+      log(`RX: ${raw.length}B received, err=${errCnt}`);
+      let rsR;
+      try{rsR=rsDecodeAll(raw,C.rsT)}catch(e){log(`RX: RS error: ${e}`);self.ui.complete(null,errCnt,[],0);return}
+
+      if(rsR.corrected>0)log(`RX: RS corrected ${rsR.corrected} bytes ✓`);
+      else if(rsR.corrected<0)log('RX: RS FAILED');
+      else log('RX: RS no errors');
+
+      const pkt=parsePkt(rsR.data);
+      self.ui.complete(pkt,errCnt,raw,rsR.corrected);
+      setTimeout(()=>{if(self.on){state='PRE';preCount=0;errCnt=0;payloadLen=-1;self.ui.status('다음 대기...');self.ui.prog(0)}},1500);
+    }
+
+    source.connect(this.proc);this.proc.connect(ctx.destination);
+    const cv=document.getElementById(this.ui.cid),cx=cv.getContext('2d');cv.width=cv.offsetWidth*2;cv.height=cv.offsetHeight*2;
+    const fftD=new Float32Array(an.frequencyBinCount),binHz=sr/an.fftSize;
+    const band=BANDS[C.mode],fLo=Math.round((band.lo-500)/binHz),fHi=Math.round((band.hi+500)/binHz),fR=fHi-fLo;
+    const chCols=[[0,255,168],[0,212,255]];const toneBins=[];for(const ch of chs)for(const f of ch.tones)toneBins.push(Math.round(f/binHz));
+    const drawViz=()=>{if(!this.on)return;an.getFloatFrequencyData(fftD);const w=cv.width,h=cv.height;const img=cx.getImageData(3,0,w-3,h);cx.putImageData(img,0,0);for(let y=0;y<h;y++){const bin=fLo+Math.floor((1-y/h)*fR);if(bin<0||bin>=fftD.length)continue;const raw2=(fftD[bin]+60)/35;const val=Math.max(0,Math.min(1,raw2));const freq=bin*binHz;let col=[40,50,60];for(let c=0;c<C.nCh&&c<chCols.length;c++){if(freq>=chs[c].base-30&&freq<=chs[c].hi+30){col=chCols[c];break}}const v=Math.pow(val,1.5);const isT=toneBins.some(tb=>Math.abs(tb-bin)<=1);const bst=isT?1.4:1;cx.fillStyle=`rgb(${Math.min(255,(v*col[0]*bst)|0)},${Math.min(255,(v*col[1]*bst)|0)},${Math.min(255,(v*col[2]*bst)|0)})`;cx.fillRect(w-3,y,3,1)}cx.fillStyle='rgba(255,255,255,.04)';for(const tb of toneBins){const y2=h*(1-(tb-fLo)/fR);cx.fillRect(w-50,y2,50,1)}this.anim=requestAnimationFrame(drawViz)};
+    this.anim=requestAnimationFrame(drawViz);
+    log(`RX: SR=${sr}, sps=${sps}, tones=${chs.map(c=>c.tones.join('/')).join(' | ')}`);
+  }
+  stop(){this.on=false;if(this.stream){this.stream.getTracks().forEach(t=>t.stop());this.stream=null}if(this.proc){this.proc.disconnect();this.proc=null}if(this.anim){cancelAnimationFrame(this.anim);this.anim=null}}
+}
+
+/*═══ MIC/MUTEX/UI ═══*/
+let micRes=null;function showMic(){$('micO').classList.add('show');return new Promise(r=>{micRes=r})}function closeMic(){$('micO').classList.remove('show');if(micRes){micRes(false);micRes=null}}
+async function reqMic(){$('micO').classList.remove('show');try{const s=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}});s.getTracks().forEach(t=>t.stop());if(micRes){micRes(true);micRes=null}}catch(e){alert('마이크 거부');if(micRes){micRes(false);micRes=null}}}
+async function ensMic(){try{const p=await navigator.permissions.query({name:'microphone'});if(p.state==='granted')return true}catch(e){}return await showMic()}
+function lockTx(){$('rxBtn').disabled=true;$('frxBtn').disabled=true}function unlockTx(){if(!rxI.text)$('rxBtn').disabled=false;if(!rxI.file)$('frxBtn').disabled=false}
+function lockRx(){$('txBtn').disabled=true;$('ftxBtn').disabled=true}function unlockRx(){$('txBtn').disabled=false;if(fData)$('ftxBtn').disabled=false}
+function addE(lid,eid,text,ok,meta){const em=$(eid);if(em)em.remove();const e=document.createElement('div');e.className='rx-e '+(ok?'ok':'fail');e.innerHTML=`<span class="t">${new Date().toLocaleTimeString('ko',{hour12:false})}</span><span class="v">${text.replace(/</g,'&lt;')}</span><span class="m">${meta}</span>`;$(lid).appendChild(e);$(lid).scrollTop=$(lid).scrollHeight;if(ok)rxCount++;$('s_rn').textContent=rxCount}
+
+function updStats(){
+  const text=$('txIn').value,orig=new TextEncoder().encode(text).length,comp=compress(text);
+  const pkt=orig>0?buildPkt(0x01,comp,''):new Uint8Array(0);
+  const rs=orig>0?rsEncodeAll(Array.from(pkt),C.rsT):{encoded:[]};
+  const tp=rs.encoded.length;const ds=Math.ceil(tp/C.nCh)*4;
+  const ts=PRE_SYMS+SYNC_PAT.length+24+ds+4;
+  $('s_to').textContent=orig;$('s_tc').textContent=comp.length;$('s_tr').textContent=tp;
+  $('s_tt').textContent=orig>0?`${(ts/C.baud).toFixed(1)}s`:'-';
+}
+$('txIn').addEventListener('input',updStats);
+
+async function doTx(kind){
+  if(txBusy)return;let pktB;
+  if(kind==='text'){const text=$('txIn').value;if(!text)return;$('txBtn').disabled=true;$('txBtn').textContent='■ 전송중';$('txD').classList.add('on');lockTx();const comp=compress(text);pktB=buildPkt(0x01,comp,'');log(`TX: orig=${new TextEncoder().encode(text).length}B comp=${comp.length}B pkt=${pktB.length}B`);await transmit(pktB,{cid:'txC',prog:p=>$('txPg').style.width=(p*100)+'%',status:m=>$('txS').textContent=m});$('txBtn').disabled=false;$('txBtn').textContent='▶ 전송';$('txD').classList.remove('on');unlockTx()}
+  else{if(!fData)return;$('ftxBtn').disabled=true;$('ftxBtn').textContent='■ 전송중';$('ftxD').classList.add('on');lockTx();const comp=compress(fData);pktB=buildPkt(0x02,comp,fName2);log(`TX: ${fName2} ${fData.length}B→${comp.length}B`);await transmit(pktB,{cid:'ftxC',prog:p=>$('ftxPg').style.width=(p*100)+'%',status:m=>$('ftxS').textContent=m});$('ftxBtn').disabled=false;$('ftxBtn').textContent='▶ 파일전송';$('ftxD').classList.remove('on');unlockTx()}
+}
+
+let rxI={text:null,file:null},rxFB=null,rxFN='';
+function resetRx(k){const p=k==='text'?'':'f';$(p+'rxBtn').textContent='● 수신';$(p+'rxBtn').className='btn brc';$(p+'rxBtn').disabled=false;$(p+'rxD').classList.remove('onr');$(p+'rxS').textContent='대기';$(p+'rxPg').style.width='0%'}
+async function togRx(k){
+  const p=k==='text'?'':'f',btn=p+'rxBtn',dot=p+'rxD',stat=p+'rxS';
+  const lid=k==='text'?'rxLog':'frxLog',eid=k==='text'?'rxE':'frxE';
+  if(rxI[k]){rxI[k].stop();rxI[k]=null;resetRx(k);unlockRx();return}
+  if(!await ensMic())return;
+  lockRx();$(btn).textContent='■ 중지';$(btn).className='btn bst';$(dot).classList.add('onr');$(stat).textContent='대기중...';$(p+'rxPg').style.width='0%';
+  if(k==='file')$('frxDL').style.display='none';
+  rxI[k]=new Rx({cid:k==='text'?'rxC':'frxC',status:m=>$(stat).textContent=m,prog:p2=>$(p+'rxPg').style.width=(p2*100)+'%',
+    bytes:b=>$(k==='text'?'s_rb':'s_fb').textContent=b,errors:e=>$(k==='text'?'s_re':'s_fe2').textContent=e,
+    complete:(pkt,errs,raw,rsC)=>{
+      const ri=rsC>0?`RS복구${rsC}`:rsC<0?'RS실패':'RS정상';
+      if(k==='text')$('s_rf').textContent=rsC>0?rsC:0;else $('s_ff').textContent=rsC>0?rsC:0;
+      if(!pkt){addE(lid,eid,'⚠ 파싱 실패',false,`err=${errs} ${ri}`);return}
+      if(k==='text'||pkt.type===1){
+        if(pkt.crcOk){const dec=new TextDecoder().decode(decompress(pkt.data));addE(lid,eid,dec,true,`${new TextEncoder().encode(dec).length}B err=${errs} ${ri} CRC✓`);$('s_rd').textContent=new TextEncoder().encode(dec).length;$(stat).textContent=`완료✓ ${ri}`;log(`RX OK: "${dec.slice(0,60)}" ${ri}`)}
+        else{let dt='?';try{dt=new TextDecoder().decode(decompress(pkt.data))}catch{}addE(lid,eid,dt+'\n⚠CRC불일치',false,`err=${errs} ${ri}`)}
+      }else if(pkt.type===2){const fd=decompress(pkt.data);rxFB=new Blob([fd]);rxFN=pkt.name||'file';$('s_fd').textContent=fmtSz(fd.length);addE(lid,eid,pkt.crcOk?`✅${rxFN}(${fmtSz(fd.length)})`:`⚠${rxFN} CRC오류`,pkt.crcOk,ri);$('frxDL').style.display='flex'}
+    }
+  });
+  try{await rxI[k].start()}catch(e){rxI[k]=null;resetRx(k);$(stat).textContent='마이크실패';unlockRx()}
+}
+
+let fData=null,fName2='';function fmtSz(b){return b<1024?b+'B':b<1048576?(b/1024).toFixed(1)+'KB':(b/1048576).toFixed(2)+'MB'}
+function onFile(e){const f=e.target.files[0];if(!f)return;fName2=f.name;const r=new FileReader();r.onload=ev=>{fData=new Uint8Array(ev.target.result);$('fI').style.display='block';$('fN').textContent=f.name;$('fSz').textContent=' '+fmtSz(fData.length);$('ftxBtn').disabled=false;const comp=compress(fData),pkt=buildPkt(0x02,comp,f.name);const rs=rsEncodeAll(Array.from(pkt),C.rsT);const tp=rs.encoded.length;const ds=Math.ceil(tp/C.nCh)*4;const ts=PRE_SYMS+SYNC_PAT.length+24+ds+4;$('s_fo').textContent=fmtSz(fData.length);$('s_fc').textContent=fmtSz(tp);$('s_fe').textContent=(ts/C.baud).toFixed(1)+'s';$('ftxS').textContent='준비'};r.readAsArrayBuffer(f)}
+const dz=$('fDrop');dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('dv')});dz.addEventListener('dragleave',()=>dz.classList.remove('dv'));dz.addEventListener('drop',e=>{e.preventDefault();dz.classList.remove('dv');const f=e.dataTransfer.files[0];if(f){const dt=new DataTransfer();dt.items.add(f);$('fIn').files=dt.files;onFile({target:{files:[f]}})}});
+function dlFile(){if(!rxFB)return;const u=URL.createObjectURL(rxFB),a=document.createElement('a');a.href=u;a.download=rxFN;document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(u)}
+cfgChg();
+</script>
+</body>
+</html>
