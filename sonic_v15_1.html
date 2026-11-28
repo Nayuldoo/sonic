@@ -66,7 +66,7 @@ textarea.inp{width:100%;min-height:65px;background:var(--bg);border:1px solid va
   <div class="pnl tx"><div class="pt">📡 TX</div>
     <textarea class="inp" id="txIn" placeholder="전송할 텍스트..."></textarea>
     <div class="sts"><div class="st">원본<b id="s_to">0</b>B</div><div class="st">압축<b id="s_tc">0</b>B</div><div class="st">RS포함<b id="s_tr">0</b>B</div><div class="st"><b id="s_tt">-</b></div></div>
-    <div class="br"><button class="btn bt" id="txBtn" onclick="doTx('text')">▶ 전송</button></div>
+    <div class="br"><button class="btn bt" id="txBtn" onclick="doTx('text')">▶ 전송</button><button class="btn brs" onclick="resetTxPanel('text')" title="입력한 텍스트·통계·그래프를 지웁니다 (전송 중이면 취소)">↺ 초기화</button></div>
     <div class="pb"><div class="pf" id="txPg"></div></div><div class="sl"><span class="sd" id="txD"></span><span id="txS">대기</span></div>
     <div class="viz"><canvas id="txC"></canvas><div class="viz-lb">TONE MAP</div></div>
   </div>
@@ -89,7 +89,7 @@ textarea.inp{width:100%;min-height:65px;background:var(--bg);border:1px solid va
       <div class="cg w"><span>재전송</span><input type="text" id="segSel" placeholder="수신 측 누락 목록 붙여넣기 (예: 3,7-9) · 비우면 전체" oninput="updFileStats()"></div>
     </div>
     <div class="sts"><div class="st">원본<b id="s_fo">0</b></div><div class="st">압축<b id="s_fz">0</b></div><div class="st">세그<b id="s_fn">0</b></div><div class="st">보낼 세그<b id="s_fc">0</b></div><div class="st"><b id="s_fe">-</b></div></div>
-    <div class="br"><button class="btn bt" id="ftxBtn" onclick="doTx('file')" disabled>▶ 파일 전송</button></div>
+    <div class="br"><button class="btn bt" id="ftxBtn" onclick="doTx('file')" disabled>▶ 파일 전송</button><button class="btn brs" onclick="resetTxPanel('file')" title="선택한 파일·옵션·통계·그래프를 지웁니다 (전송 중이면 취소)">↺ 초기화</button></div>
     <div class="pb"><div class="pf" id="ftxPg"></div></div><div class="sl"><span class="sd" id="ftxD"></span><span id="ftxS">파일 필요</span></div>
     <div class="viz"><canvas id="ftxC"></canvas><div class="viz-lb">TONE MAP</div></div>
   </div>
@@ -1457,6 +1457,29 @@ async function autoEnvBeforeTx(status) {
   const sc = $('selEnv').value; if (sc === 'off') return;
   const r = (envLast && Date.now() - envLast.t < 30000) ? envLast.r : await measureEnv(status);
   if (r) applyEnv(r, sc);
+}
+
+/*── ↺ 송신 초기화: 전송 중이면 먼저 취소하고, 입력·통계·진행 표시·그래프를 비운다 ──*/
+async function resetTxPanel(kind) {
+  const isT = kind === 'text', p = isT ? '' : 'f';
+  if (txBusy && txCur) {
+    cancelTx();
+    const t0 = Date.now(); while (txBusy && Date.now() - t0 < 2000) await new Promise(r => setTimeout(r, 50));
+  }
+  if (isT) {
+    $('txIn').value = '';
+    for (const id of ['s_to', 's_tc', 's_tr']) $(id).textContent = 0; $('s_tt').textContent = '-';
+    $('txS').textContent = '대기 (초기화됨)';
+  } else {
+    fData = null; fName2 = ''; fComp = null; fCrc = 0; fId = 0; fRaw = false;
+    $('fIn').value = ''; $('fI').style.display = 'none'; $('fN').textContent = ''; $('fSz').textContent = '';
+    $('segSel').value = ''; $('selSeg').value = '1024'; $('selRep').value = '1';
+    for (const id of ['s_fo', 's_fz', 's_fn', 's_fc']) $(id).textContent = 0; $('s_fe').textContent = '-';
+    $('ftxBtn').disabled = true; $('ftxS').textContent = '파일 필요 (초기화됨)';
+  }
+  $(p + 'txPg').style.width = '0%'; $(p + 'txD').classList.remove('on');
+  const cv = $(isT ? 'txC' : 'ftxC'); if (fitCanvas(cv)) { const cx = cv.getContext('2d'); cx.fillStyle = '#060a12'; cx.fillRect(0, 0, cv.width, cv.height); }
+  log(`TX ${isT ? '텍스트' : '파일'} 초기화`);
 }
 
 /*── 파일 TX: 압축 → 세그먼트 → 세그먼트마다 독립 프레임 ──
