@@ -1,0 +1,1755 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SonicLink v15.1</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
+:root{--bg:#060a12;--sf:#0c1424;--sf2:#13203a;--bd:#1a2d4a;--a1:#00ffa8;--a2:#00d4ff;--a3:#b490ff;--a4:#ffb020;--adim:rgba(0,255,168,.1);--dng:#ff4d6a;--wrn:#f5a623;--tx:#c9d1d9;--td:#4a5a72;--tb:#f2f6ff;--mono:'JetBrains Mono',monospace;--sans:'Noto Sans KR',sans-serif}
+*{margin:0;padding:0;box-sizing:border-box}body{background:var(--bg);color:var(--tx);font-family:var(--sans);min-height:100vh}
+body::before{content:'';position:fixed;inset:0;background:linear-gradient(rgba(0,255,168,.012) 1px,transparent 1px),linear-gradient(90deg,rgba(0,255,168,.012) 1px,transparent 1px);background-size:50px 50px;pointer-events:none}
+.ctn{position:relative;z-index:1;max-width:960px;margin:0 auto;padding:14px 12px 36px}
+.hdr{text-align:center;margin-bottom:12px}.logo{font-family:var(--mono);font-size:24px;font-weight:700;background:linear-gradient(135deg,var(--a1),var(--a2),var(--a3));-webkit-background-clip:text;-webkit-text-fill-color:transparent}.sub{font-size:8px;color:var(--td);font-family:var(--mono);letter-spacing:2px;margin-top:1px}
+.tags{display:flex;gap:3px;justify-content:center;margin-top:5px;flex-wrap:wrap}.tag{font-family:var(--mono);font-size:7px;padding:2px 6px;border-radius:3px;border:1px solid var(--bd);color:var(--a2)}
+.tabs{display:flex;border-bottom:1px solid var(--bd);margin-bottom:10px}.tab{flex:1;padding:8px;text-align:center;font-family:var(--mono);font-size:10px;color:var(--td);cursor:pointer;border-bottom:2px solid transparent}.tab:hover{color:var(--tx)}.tab.on{color:var(--a1);border-color:var(--a1)}.tc{display:none}.tc.on{display:block}
+.cfg{background:var(--sf);border:1px solid var(--bd);border-radius:9px;padding:10px 12px;margin-bottom:10px}.cfg-r{display:flex;gap:7px;flex-wrap:wrap;align-items:center}.cg{display:flex;align-items:center;gap:4px;font-family:var(--mono);font-size:9px;color:var(--td)}.cg select,.cg input[type=text]{background:var(--bg);border:1px solid var(--bd);color:var(--tx);font-family:var(--mono);font-size:9px;padding:3px 5px;border-radius:4px;outline:none}.cg input[type=range]{width:55px;accent-color:var(--a1)}.cg button{background:var(--sf2);border:1px solid var(--bd);color:var(--a4);font-family:var(--mono);font-size:9px;padding:3px 8px;border-radius:4px;cursor:pointer}
+.cfg-warn{font-family:var(--mono);font-size:8px;color:var(--wrn);margin-top:5px;padding:4px 7px;background:rgba(245,166,35,.06);border:1px solid rgba(245,166,35,.12);border-radius:4px;line-height:1.5}
+.cfg-info{font-family:var(--mono);font-size:8px;color:var(--a2);margin-top:3px}.bm{margin-top:5px;border-top:1px solid var(--bd);padding-top:5px}.bm-t{font-family:var(--mono);font-size:7px;color:var(--td);letter-spacing:2px;margin-bottom:3px}.bm-r{display:flex;gap:2px}.bm-b{flex:1;height:13px;border-radius:3px;font-family:var(--mono);font-size:6px;color:rgba(255,255,255,.7);display:flex;align-items:center;justify-content:center}.cfg-id{font-family:var(--mono);font-size:8px;color:var(--a3);margin-top:3px}
+.pnls{display:grid;grid-template-columns:1fr 1fr;gap:10px}@media(max-width:700px){.pnls{grid-template-columns:1fr}}
+.pnl{background:var(--sf);border:1px solid var(--bd);border-radius:10px;padding:12px;position:relative;overflow:hidden}.pnl::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--a1),transparent);opacity:.4}.pnl.rx::before{background:linear-gradient(90deg,transparent,var(--a2),transparent)}
+.pt{font-family:var(--mono);font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:2px;color:var(--a1);margin-bottom:7px}.pnl.rx .pt{color:var(--a2)}
+textarea.inp{width:100%;min-height:65px;background:var(--bg);border:1px solid var(--bd);border-radius:6px;padding:7px;color:var(--tb);font-family:var(--mono);font-size:11px;line-height:1.5;resize:vertical;outline:none}textarea.inp:focus{border-color:var(--a1)}textarea.inp::placeholder{color:var(--td)}
+.rx-log{width:100%;min-height:65px;max-height:220px;overflow-y:auto;background:var(--bg);border:1px solid var(--bd);border-radius:6px;padding:3px}
+.rx-e{padding:5px 6px;margin:2px 0;border-radius:4px;font-family:var(--mono);font-size:10px;line-height:1.4;word-break:break-all;white-space:pre-wrap}.rx-e.ok{background:rgba(0,255,168,.06);border-left:3px solid var(--a1)}.rx-e.fail{background:rgba(255,77,106,.06);border-left:3px solid var(--dng)}.rx-e.prog{background:rgba(0,212,255,.05);border-left:3px solid var(--a2)}.rx-e .t{font-size:7px;color:var(--td);display:block}.rx-e .v{color:var(--tb)}.rx-e .m{font-size:7px;color:var(--td);margin-top:1px;display:block}
+.rx-e .fb{height:3px;background:var(--bd);border-radius:2px;margin:4px 0 2px;overflow:hidden}.rx-e .fb i{display:block;height:100%;background:linear-gradient(90deg,var(--a2),var(--a1))}
+.rx-e .acts{display:flex;gap:4px;margin-top:4px}.rx-e .acts button{font-family:var(--mono);font-size:8px;padding:3px 7px;border-radius:4px;border:1px solid var(--bd);background:var(--sf2);color:var(--a2);cursor:pointer}.rx-e .acts button.sv{color:var(--bg);background:var(--a3);border-color:var(--a3)}
+.rx-empty{padding:8px;text-align:center;font-family:var(--mono);font-size:10px;color:var(--td)}.fdrop{border:2px dashed var(--bd);border-radius:7px;padding:14px 8px;text-align:center;cursor:pointer;background:var(--bg)}.fdrop:hover,.fdrop.dv{border-color:var(--a1);background:var(--adim)}.fdrop .ic{font-size:18px}.fdrop .lb{font-family:var(--mono);font-size:9px;color:var(--td);margin-top:2px}
+.fi{margin-top:5px;padding:5px 8px;background:var(--sf2);border-radius:5px;border:1px solid var(--bd);font-family:var(--mono);font-size:9px;display:none}.fi .fn{color:var(--a1);font-weight:600}
+.fopt{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}.fopt .cg{flex:0 0 auto}.fopt .cg.w{flex:1 1 100%}.fopt .cg.w input{flex:1;min-width:0}
+.br{display:flex;gap:5px;margin-top:6px}.btn{flex:1;padding:8px 8px;border:none;border-radius:6px;font-family:var(--mono);font-size:10px;font-weight:600;cursor:pointer;transition:.2s;display:flex;align-items:center;justify-content:center;gap:3px}
+.bt{background:linear-gradient(135deg,var(--a1),#00c98a);color:var(--bg)}.bt:hover{box-shadow:0 2px 12px rgba(0,255,168,.3);transform:translateY(-1px)}.bt:disabled{opacity:.3;cursor:not-allowed;transform:none;box-shadow:none}
+.brc{background:linear-gradient(135deg,var(--a2),#0098b0);color:var(--bg)}.brc:hover{box-shadow:0 2px 12px rgba(0,212,255,.3)}.brc:disabled{opacity:.3;cursor:not-allowed;transform:none;box-shadow:none}.bst{background:var(--dng);color:#fff}
+.brs{flex:0 0 auto;padding:8px 12px;background:var(--sf2);color:var(--a4);border:1px solid var(--bd)}.brs:hover{border-color:var(--a4)}
+.bdl{background:var(--a3);color:#fff;margin-top:4px;display:none}
+.sts{display:flex;gap:6px;margin-top:5px;flex-wrap:wrap}.st{font-family:var(--mono);font-size:8px;color:var(--td)}.st b{color:var(--a1);font-weight:500}.pnl.rx .st b{color:var(--a2)}
+.pb{height:3px;background:var(--bd);border-radius:2px;margin-top:5px;overflow:hidden}.pf{height:100%;background:linear-gradient(90deg,var(--a1),var(--a2));border-radius:2px;width:0%;transition:width .1s}
+.sl{font-family:var(--mono);font-size:8px;color:var(--td);margin-top:4px;display:flex;align-items:center;gap:4px;min-height:10px}.sd{width:5px;height:5px;border-radius:50%;background:var(--td);flex-shrink:0}.sd.on{background:var(--a1);box-shadow:0 0 6px var(--a1);animation:p 1s infinite}.sd.onr{background:var(--a2);box-shadow:0 0 6px var(--a2);animation:p 1s infinite}@keyframes p{0%,100%{opacity:1}50%{opacity:.3}}
+.viz{margin-top:5px;height:110px;background:var(--bg);border-radius:6px;border:1px solid var(--bd);overflow:hidden;position:relative}.viz canvas{width:100%;height:100%;display:block}.viz-lb{position:absolute;bottom:1px;right:4px;font-family:var(--mono);font-size:6px;color:var(--td);pointer-events:none}
+.mo{display:none;position:fixed;inset:0;z-index:100;background:rgba(6,10,18,.9);backdrop-filter:blur(6px);align-items:center;justify-content:center}.mo.show{display:flex}.mdlg{background:var(--sf);border:1px solid var(--bd);border-radius:12px;padding:20px;max-width:330px;text-align:center}.mdlg .mi{font-size:30px;margin-bottom:4px}.mdlg h3{font-family:var(--mono);font-size:12px;color:var(--tb);margin-bottom:3px}.mdlg .p2{font-size:10px;color:var(--td);line-height:1.5;margin-bottom:8px;display:block}.mdlg .ms{text-align:left;font-size:9px;color:var(--tx);line-height:1.6;background:var(--bg);border-radius:5px;padding:7px 10px;margin-bottom:10px;font-family:var(--mono)}.mr{display:flex;gap:5px}.mb{flex:1;padding:8px;border:none;border-radius:6px;font-family:var(--mono);font-size:10px;font-weight:600;cursor:pointer}.mba{background:var(--a2);color:var(--bg)}.mbc{background:var(--sf2);color:var(--td);border:1px solid var(--bd)}
+.dbg-t{font-family:var(--mono);font-size:7px;color:var(--td);cursor:pointer;margin-top:6px;text-align:center}.dbg-t span{margin:0 6px}.dbg{display:none;margin-top:3px;padding:5px;background:var(--bg);border:1px solid var(--bd);border-radius:5px;font-family:var(--mono);font-size:7px;color:var(--td);max-height:160px;overflow-y:auto;line-height:1.5;white-space:pre-wrap}.dbg.show{display:block}
+</style>
+</head>
+<body>
+<div class="mo" id="micO"><div class="mdlg"><div class="mi">🎙️</div><h3>마이크 권한</h3><span class="p2">음파 수신에 마이크 접근이 필요합니다.</span><div class="ms">📱 모바일: 팝업 → 허용<br>💻 PC: 주소창 🔒 → 마이크</div><div class="mr"><button class="mb mbc" onclick="closeMic()">취소</button><button class="mb mba" onclick="reqMic()">허용</button></div></div></div>
+<div class="ctn">
+<div class="hdr"><div class="logo">⟨ SonicLink v15.1 ⟩</div><div class="sub">16-FSK 싱글·듀얼·쿼드 · 이중 CHIRP 동기 · 우도 검출 · 다중가설 RS · 세그먼트 파일 전송 · 수신 전자동 인식</div>
+<div class="tags"><span class="tag">싱글/듀얼/쿼드톤</span><span class="tag">보호구간 3단</span><span class="tag">톤별 LLR 검출</span><span class="tag">잔향 재추정</span><span class="tag">블록별 다중가설 RS</span><span class="tag">파일 1MB · 이어받기</span><span class="tag">수신 자동 인식</span><span class="tag">수신 초기화</span><span class="tag">송신 전 환경 측정</span><span class="tag">톤 맵 그래프</span><span class="tag">CRC-16/32</span></div></div>
+<div class="tabs"><div class="tab on" onclick="swTab('text')">📝 텍스트</div><div class="tab" onclick="swTab('file')">📁 파일</div></div>
+<div class="cfg">
+  <div class="cfg-r">
+    <div class="cg"><span>대역</span><select id="selMode" onchange="cfgChg()"><option value="mid" selected>비간섭 5.5-8k</option><option value="ultra">준초음파 12-16k</option></select></div>
+    <div class="cg"><span>속도</span><select id="selSpd" onchange="cfgChg()"><option value="fast">빠름 (보호 5ms)</option><option value="std" selected>표준 (보호 11ms)</option><option value="stable">안정 (2배 느림, 보호 21ms)</option></select></div>
+    <div class="cg"><span>톤방식</span><select id="selDT" onchange="cfgChg()"><option value="0" selected>싱글 4bit (가장 안정)</option><option value="1">듀얼 6bit (1.5×)</option><option value="2">쿼드 8bit (2×)</option></select></div>
+    <div class="cg"><span>RS</span><select id="selRS" onchange="cfgChg()"><option value="16">t=16 최강</option><option value="8" selected>t=8 강</option><option value="4">t=4</option><option value="2">t=2</option></select></div>
+    <div class="cg"><span>볼륨</span><input type="range" id="selVol" min="0.3" max="1" step="0.05" value="0.95" oninput="cfgChg()"></div>
+    <div class="cg"><button onclick="testTone()">🔊</button></div>
+    <div class="cg"><span>환경</span><select id="selEnv"><option value="mode" selected>송신 전 측정 → 속도·톤·RS 자동</option><option value="all">송신 전 측정 → 대역까지 자동</option><option value="off">측정 안 함 (수동)</option></select><button onclick="envButton()" title="지금 주변 소음·잔향을 측정해 설정에 반영">📏 측정</button></div>
+  </div>
+  <div class="cfg-warn">⚠ 양쪽 모두 v15 | 수신기는 대역·속도·톤방식·RS 를 모두 자동 인식 → 송신 쪽만 고르면 됩니다 | 수신을 켠 채로 송신 가능(송신 중 수신 일시정지) | 울림이 심하거나 멀면: 안정·싱글 / 가깝고 조용하면: 빠름·쿼드</div>
+  <div class="cfg-info" id="cfgInfo"></div>
+  <div class="cfg-info" id="cfgEnv" style="color:var(--a4)">📏 송신 버튼을 누르면 약 1.5초간 주변 소음과 잔향을 재고(짧은 처프 2회) 설정을 맞춘 뒤 보냅니다</div>
+  <div class="bm"><div class="bm-t">TX TONES</div><div class="bm-r" id="bmRow"></div></div>
+  <div class="cfg-id" id="cfgId"></div>
+</div>
+<div class="tc on" id="tc-text"><div class="pnls" style="margin-top:6px">
+  <div class="pnl tx"><div class="pt">📡 TX</div>
+    <textarea class="inp" id="txIn" placeholder="전송할 텍스트..."></textarea>
+    <div class="sts"><div class="st">원본<b id="s_to">0</b>B</div><div class="st">압축<b id="s_tc">0</b>B</div><div class="st">RS포함<b id="s_tr">0</b>B</div><div class="st"><b id="s_tt">-</b></div></div>
+    <div class="br"><button class="btn bt" id="txBtn" onclick="doTx('text')">▶ 전송</button></div>
+    <div class="pb"><div class="pf" id="txPg"></div></div><div class="sl"><span class="sd" id="txD"></span><span id="txS">대기</span></div>
+    <div class="viz"><canvas id="txC"></canvas><div class="viz-lb">TONE MAP</div></div>
+  </div>
+  <div class="pnl rx"><div class="pt">📻 RX</div>
+    <div class="rx-log" id="rxLog"><div class="rx-empty">—</div></div>
+    <div class="sts"><div class="st">수신<b id="s_rb">0</b>B</div><div class="st">RS복구<b id="s_rf">0</b></div><div class="st">불확실<b id="s_re">0</b></div><div class="st">성공<b id="s_rn">0</b></div><div class="st">실패<b id="s_rx">0</b></div></div>
+    <div class="br"><button class="btn brc" id="rxBtn" onclick="togRx('text')">● 수신</button><button class="btn brs" onclick="resetRxPanel('text')" title="수신 기록·통계·진행 중인 수신을 모두 지웁니다">↺ 초기화</button></div>
+    <div class="pb"><div class="pf" id="rxPg"></div></div><div class="sl"><span class="sd" id="rxD"></span><span id="rxS">대기</span></div>
+    <div class="viz"><canvas id="rxC"></canvas><div class="viz-lb">SPECTRUM 5–16.5k</div></div>
+  </div>
+</div></div>
+<div class="tc" id="tc-file"><div class="pnls" style="margin-top:6px">
+  <div class="pnl tx"><div class="pt">📡 FILE TX</div>
+    <div class="fdrop" id="fDrop" onclick="$('fIn').click()"><div class="ic">📎</div><div class="lb">파일 선택 (최대 1MB · 세그먼트로 나눠 전송)</div></div>
+    <input type="file" id="fIn" style="display:none" onchange="onFile(event)">
+    <div class="fi" id="fI"><span class="fn" id="fN"></span><span id="fSz"></span></div>
+    <div class="fopt">
+      <div class="cg"><span>세그먼트</span><select id="selSeg" onchange="updFileStats()"><option value="512">512B</option><option value="1024" selected>1KB</option><option value="2048">2KB</option><option value="4096">4KB</option></select></div>
+      <div class="cg"><span>반복</span><select id="selRep" onchange="updFileStats()"><option value="1" selected>1회</option><option value="2">2회</option><option value="3">3회</option></select></div>
+      <div class="cg w"><span>재전송</span><input type="text" id="segSel" placeholder="수신 측 누락 목록 붙여넣기 (예: 3,7-9) · 비우면 전체" oninput="updFileStats()"></div>
+    </div>
+    <div class="sts"><div class="st">원본<b id="s_fo">0</b></div><div class="st">압축<b id="s_fz">0</b></div><div class="st">세그<b id="s_fn">0</b></div><div class="st">보낼 세그<b id="s_fc">0</b></div><div class="st"><b id="s_fe">-</b></div></div>
+    <div class="br"><button class="btn bt" id="ftxBtn" onclick="doTx('file')" disabled>▶ 파일 전송</button></div>
+    <div class="pb"><div class="pf" id="ftxPg"></div></div><div class="sl"><span class="sd" id="ftxD"></span><span id="ftxS">파일 필요</span></div>
+    <div class="viz"><canvas id="ftxC"></canvas><div class="viz-lb">TONE MAP</div></div>
+  </div>
+  <div class="pnl rx"><div class="pt">📻 FILE RX</div>
+    <div class="rx-log" id="frxLog"><div class="rx-empty">—</div></div>
+    <div class="sts"><div class="st">수신<b id="s_fb">0</b>B</div><div class="st">RS복구<b id="s_ff">0</b></div><div class="st">불확실<b id="s_fe2">0</b></div><div class="st">세그 실패<b id="s_fx">0</b></div></div>
+    <div class="br"><button class="btn brc" id="frxBtn" onclick="togRx('file')">● 수신</button><button class="btn brs" onclick="resetRxPanel('file')" title="받은 세그먼트·파일·통계를 모두 지웁니다">↺ 초기화</button></div>
+    <div class="pb"><div class="pf" id="frxPg"></div></div><div class="sl"><span class="sd" id="frxD"></span><span id="frxS">대기</span></div>
+    <div class="viz"><canvas id="frxC"></canvas><div class="viz-lb">SPECTRUM 5–16.5k</div></div>
+  </div>
+</div></div>
+<div class="dbg-t"><span onclick="$('dbg').classList.toggle('show')">▼ 디버그</span><span onclick="$('dbg').textContent=''">✕ 로그 지우기</span></div>
+<div class="dbg" id="dbg"></div>
+</div>
+<script>
+/*═════════ ENGINE v15 ═════════
+  프레임: lead | WAKE | gap | (UP|gap|DOWN|gap)×2 | TRAIN×2 | PROBE×2(무음) | HDR | DATA | TAIL
+  · HDR = [길이 2B][플래그 1B: 톤방식·RS][CRC-8] × 3사본 → 수신기가 톤방식·RS를 스스로 읽는다
+  · 톤방식: 싱글(16톤 중 1, 4bit) / 듀얼(8톤×2, 6bit) / 쿼드(4톤×4, 8bit) — 그룹마다 동시 전송
+  · DATA 는 PRBS 스크램블 → 같은 톤 몰림·약한 톤 반복 방지
+  · 심볼마다 위상 조합을 골라 피크를 낮춤 → 다중톤일수록 톤당 출력이 커진다
+  · 수신: 톤별 '켜짐 수준 μ / 꺼짐 수준 ν' 를 학습·HDR 로 보정하고 데이터 중에도 추적하는 우도(LLR) 검출
+          (깊은 널 톤을 강제로 키우지 않는다) + 블록별 다중가설 RS 복호 + CRC 최종 확인 */
+const NT = 16;
+const GF = { exp: new Uint8Array(512), log: new Int16Array(256) };
+(function () {
+  let x = 1;
+  for (let i = 0; i < 255; i++) { GF.exp[i] = x; GF.log[x] = i; x <<= 1; if (x & 0x100) x ^= 0x11d; }
+  for (let i = 255; i < 512; i++) GF.exp[i] = GF.exp[i - 255];
+  GF.log[0] = -1;
+})();
+function gfM(a, b) { return (!a || !b) ? 0 : GF.exp[GF.log[a] + GF.log[b]]; }
+function gfD(a, b) { if (!b) throw new Error('div0'); return !a ? 0 : GF.exp[(GF.log[a] - GF.log[b] + 255) % 255]; }
+function gfInv(a) { return GF.exp[255 - GF.log[a]]; }
+function gfP(a, n) { if (!a) return 0; let e = (GF.log[a] * n) % 255; if (e < 0) e += 255; return GF.exp[e]; }
+function polyMul(p, q) { const r = new Array(p.length + q.length - 1).fill(0); for (let i = 0; i < p.length; i++) { if (!p[i]) continue; for (let j = 0; j < q.length; j++) r[i + j] ^= gfM(p[i], q[j]); } return r; }
+function polyEval(p, x) { let y = p[0]; for (let i = 1; i < p.length; i++) y = gfM(y, x) ^ p[i]; return y; }
+function polyScale(p, s) { return p.map(v => gfM(v, s)); }
+function polyAdd(p, q) { const n = Math.max(p.length, q.length), r = new Array(n).fill(0); for (let i = 0; i < p.length; i++) r[n - p.length + i] = p[i]; for (let i = 0; i < q.length; i++) r[n - q.length + i] ^= q[i]; return r; }
+const _genCache = {};
+function rsGenPoly(ns) { if (_genCache[ns]) return _genCache[ns]; let g = [1]; for (let i = 0; i < ns; i++) g = polyMul(g, [1, gfP(2, i)]); _genCache[ns] = g; return g; }
+function rsEncode(msg, ns) {
+  const gen = rsGenPoly(ns);
+  const enc = new Uint8Array(msg.length + ns); enc.set(msg);
+  for (let i = 0; i < msg.length; i++) { const c = enc[i]; if (c) for (let j = 1; j < gen.length; j++) enc[i + j] ^= gfM(gen[j], c); }
+  const out = new Uint8Array(msg.length + ns); out.set(msg); out.set(enc.subarray(msg.length), msg.length);
+  return out;
+}
+function rsSyndromes(msg, ns) { const s = new Array(ns); let has = false; for (let i = 0; i < ns; i++) { s[i] = polyEval(msg, gfP(2, i)); if (s[i]) has = true; } return { synd: s, hasErr: has }; }
+function erasureLocator(coefPos) { let loc = [1]; for (const p of coefPos) loc = polyMul(loc, [gfP(2, p), 1]); return loc; }
+function forneySyndromes(synd, coefPos) { const fs = synd.slice(); for (const p of coefPos) { const x = gfP(2, p); for (let j = 0; j < fs.length - 1; j++) fs[j] = gfM(fs[j], x) ^ fs[j + 1]; fs.pop(); } return fs; }
+function bmErrorLocator(synd) {
+  let errLoc = [1], oldLoc = [1];
+  for (let i = 0; i < synd.length; i++) {
+    oldLoc.push(0);
+    let delta = synd[i];
+    for (let j = 1; j < errLoc.length; j++) delta ^= gfM(errLoc[errLoc.length - 1 - j], synd[i - j]);
+    if (delta) {
+      if (oldLoc.length > errLoc.length) { const nl = polyScale(oldLoc, delta); oldLoc = polyScale(errLoc, gfInv(delta)); errLoc = nl; }
+      errLoc = polyAdd(errLoc, polyScale(oldLoc, delta));
+    }
+  }
+  while (errLoc.length > 1 && !errLoc[0]) errLoc.shift();
+  return errLoc;
+}
+function rsDecode(data, ns, erasePos) {
+  const n = data.length;
+  const msg = Array.from(data);
+  erasePos = (erasePos || []).filter(p => p >= 0 && p < n);
+  if (erasePos.length > ns) erasePos = erasePos.slice(0, ns);
+  const { synd, hasErr } = rsSyndromes(msg, ns);
+  if (!hasErr) return { data: msg.slice(0, n - ns), corrected: 0, ok: true };
+  const eraseCoef = erasePos.map(p => n - 1 - p);
+  const fsynd = forneySyndromes(synd, eraseCoef);
+  const errLoc = bmErrorLocator(fsynd);
+  const nErr = errLoc.length - 1;
+  if (nErr * 2 + eraseCoef.length > ns) return { data: msg.slice(0, n - ns), corrected: -1, ok: false };
+  const psi = polyMul(errLoc, erasureLocator(eraseCoef));
+  const coefPositions = [];
+  for (let i = 0; i < n; i++) if (polyEval(psi, gfP(2, -i)) === 0) coefPositions.push(i);
+  if (coefPositions.length !== psi.length - 1) return { data: msg.slice(0, n - ns), corrected: -1, ok: false };
+  const sPoly = synd.slice().reverse();
+  const om = polyMul(sPoly, psi);
+  const omega = om.slice(om.length - ns);
+  const L = psi.length, dPsi = [];
+  for (let i = 0; i < L; i++) { const deg = L - 1 - i; if (deg > 0 && (deg & 1)) dPsi.push(psi[i]); else if (deg > 0) dPsi.push(0); }
+  let corrected = 0;
+  for (const cp of coefPositions) {
+    const Xi = gfP(2, cp), XiInv = gfInv(Xi);
+    const num = polyEval(omega, XiInv), den = polyEval(dPsi, XiInv);
+    if (!den) return { data: msg.slice(0, n - ns), corrected: -1, ok: false };
+    msg[n - 1 - cp] ^= gfM(Xi, gfD(num, den)); corrected++;
+  }
+  const chk = rsSyndromes(msg, ns);
+  if (chk.hasErr) return { data: msg.slice(0, n - ns), corrected: -1, ok: false };
+  return { data: msg.slice(0, n - ns), corrected, ok: true };
+}
+
+/*═══ INTERLEAVE — 열 우선 전송: 연속 오류가 모든 RS 블록에 고르게 나뉜다 ═══
+  d = [블록0(cw바이트)][블록1]... → 전송 순서 = 블록0[0],블록1[0],...,블록0[1],블록1[1],... */
+function interleave(d, cw) {
+  const nb = d.length / cw, o = new Uint8Array(d.length);
+  for (let b = 0; b < nb; b++) for (let c = 0; c < cw; c++) o[c * nb + b] = d[b * cw + c];
+  return o;
+}
+function deinterleaveWithScores(d, scores, cw) {
+  const nb = d.length / cw, o = new Uint8Array(d.length), os = new Float32Array(d.length).fill(99);
+  for (let b = 0; b < nb; b++) for (let c = 0; c < cw; c++) { const si = c * nb + b; o[b * cw + c] = d[si]; if (scores) os[b * cw + c] = scores[si]; }
+  return { data: o, scores: os };
+}
+
+
+/*═══ INTERLEAVE — 열 우선 전송: 연속 오류가 모든 RS 블록에 고르게 나뉜다 ═══*/
+function interleave(d, cw) {
+  const nb = d.length / cw, o = new Uint8Array(d.length);
+  for (let b = 0; b < nb; b++) for (let c = 0; c < cw; c++) o[c * nb + b] = d[b * cw + c];
+  return o;
+}
+function deinterleaveWithScores(d, scores, cw) {
+  const nb = d.length / cw, o = new Uint8Array(d.length), os = new Float32Array(d.length).fill(99);
+  for (let b = 0; b < nb; b++) for (let c = 0; c < cw; c++) { const si = c * nb + b; o[b * cw + c] = d[si]; if (scores) os[b * cw + c] = scores[si]; }
+  return { data: o, scores: os };
+}
+
+/*═══ RS PIPELINE — 단축 RS, 패딩 없음 ═══
+  TX: pkt → [len 2B]+pkt = W → nB = ceil(|W|/(255-ns)) 균등 분할 → 각 블록 RS(cw=bs+ns) → 인터리브
+  RX: L(총 바이트) → nB = ceil(L/255), cw = L/nB 로 역산 */
+const MAX_FRAME_BYTES = 60000;
+const RS_TS = [2, 4, 8, 16];
+function rsEncodeAll(pktBytes, rsT) {
+  const ns = rsT * 2, maxD = 255 - ns;
+  const W = new Uint8Array(2 + pktBytes.length);
+  W[0] = (pktBytes.length >> 8) & 0xFF; W[1] = pktBytes.length & 0xFF;
+  W.set(pktBytes, 2);
+  const nB = Math.ceil(W.length / maxD);
+  const bs = Math.ceil(W.length / nB), cw = bs + ns;
+  const flat = new Uint8Array(nB * cw), chunk = new Uint8Array(bs);
+  for (let b = 0; b < nB; b++) {
+    chunk.fill(0);
+    chunk.set(W.subarray(b * bs, Math.min((b + 1) * bs, W.length)));
+    flat.set(rsEncode(chunk, ns), b * cw);
+  }
+  return { encoded: nB > 1 ? interleave(flat, cw) : flat, nBlocks: nB, cw };
+}
+function rsEncodedLen(pktLen, rsT) {
+  const ns = rsT * 2, maxD = 255 - ns, w = pktLen + 2, nB = Math.ceil(w / maxD);
+  return nB * (Math.ceil(w / nB) + ns);
+}
+function lenPlausible(L, rsT) {
+  const ns = rsT * 2, maxD = 255 - ns;
+  if (L < ns + 6 || L > MAX_FRAME_BYTES) return false;
+  const nB = Math.ceil(L / 255);
+  if (L % nB) return false;
+  const bs = L / nB - ns;
+  return bs >= 1 && bs <= maxD && bs * nB > maxD * (nB - 1);
+}
+/* 다중가설 RS 복호
+   cands = [{bytes, scores}] (전송 순서, 스크램블 해제 완료) — 검출 방식·잔향소거 강도가 다른 여러 판정 결과.
+   블록마다: 소거 0개(오류만) → ns/2 → ns-4 순으로, 각 후보를 차례로 시도해 처음 성공한 것을 쓴다.
+   블록을 서로 다른 후보에서 골라 섞을 수 있다. 조립 후 check()(CRC) 실패 시 블록별 대안으로 바꿔 본다. */
+function rsDecodeMulti(cands, rsT, check) {
+  const ns = rsT * 2, L = cands[0].bytes.length, nB = Math.ceil(L / 255);
+  if (!L || L % nB) return null;
+  const cw = L / nB, bs = cw - ns;
+  if (bs < 1) return null;
+  const ecs = ns <= 4 ? [0, 2] : ns <= 8 ? [0, 4] : [0, ns / 2, (ns * 3) >> 2];
+  const dc = cands.map(c => nB > 1 ? deinterleaveWithScores(c.bytes, c.scores, cw) : { data: c.bytes, scores: c.scores || new Float32Array(L).fill(99) });
+  const idx = new Array(cw), alts = [];
+  let failed = 0;
+  for (let b = 0; b < nB; b++) {
+    const list = [], seen = new Set();
+    for (const ec of ecs) {
+      for (let v = 0; v < dc.length && list.length < 12; v++) {
+        const blk = dc[v].data.subarray(b * cw, (b + 1) * cw);
+        let erase = [];
+        if (ec) {
+          const sc = dc[v].scores;
+          for (let i = 0; i < cw; i++) idx[i] = i;
+          idx.sort((x, y) => sc[b * cw + x] - sc[b * cw + y]);
+          erase = idx.slice(0, ec);
+        }
+        const r = rsDecode(blk, ns, erase);
+        if (r.ok) { const key = r.data.join(','); if (!seen.has(key)) { seen.add(key); list.push({ data: r.data, corr: r.corrected, v, ec }); } }
+      }
+    }
+    if (!list.length) { failed++; list.push({ data: Array.from(dc[0].data.subarray(b * cw, b * cw + bs)), corr: -1, v: -1, ec: -1, dist: 0 }); }
+    else if (list.length > 1) {
+      /* 복호 결과가 여러 개면: 다시 인코딩한 부호어와 모든 후보 판정의 바이트 차이 합이 가장 작은 것 = 가장 그럴듯한 것 */
+      for (const a of list) {
+        const cwd = rsEncode(Uint8Array.from(a.data), ns); let dist = 0;
+        for (let v = 0; v < dc.length; v++) { const blk = dc[v].data; for (let i = 0; i < cw; i++) if (blk[b * cw + i] !== cwd[i]) dist++; }
+        a.dist = dist;
+      }
+      list.sort((x, y) => x.dist - y.dist);
+    }
+    alts.push(list);
+  }
+  const assemble = pick => {
+    const dec = new Uint8Array(nB * bs);
+    for (let b = 0; b < nB; b++) dec.set(alts[b][pick[b]].data, b * bs);
+    const n = (dec[0] << 8) | dec[1];
+    return 2 + n <= dec.length ? dec.slice(2, 2 + n) : dec.slice(2);
+  };
+  const pick = new Array(nB).fill(0);
+  let data = assemble(pick), crc = check(data), swaps = 0;
+  if (!crc && !failed) {
+    search:
+    for (let b = 0; b < nB; b++) for (let a = 1; a < alts[b].length; a++) {
+      pick[b] = a; const d2 = assemble(pick); swaps++;
+      if (check(d2)) { data = d2; crc = true; break search; }
+      pick[b] = 0;
+    }
+  }
+  let corr = 0; for (let b = 0; b < nB; b++) corr += Math.max(0, alts[b][pick[b]].corr);
+  const used = new Set(); for (let b = 0; b < nB; b++) used.add(alts[b][pick[b]].v);
+  return { data, ok: !failed, crcOk: crc, corrected: failed ? -1 : corr, failedBlocks: failed, nBlocks: nB, used: [...used], swaps };
+}
+
+/*═══ 스크램블러 (자기역원 XOR, 16bit LFSR) ═══*/
+const _scrCache = { n: 0, seq: new Uint8Array(0) };
+function scrambleSeq(n) {
+  if (_scrCache.n >= n) return _scrCache.seq;
+  const seq = new Uint8Array(Math.max(n, 4096)); let s = 0xACE1;
+  for (let i = 0; i < seq.length; i++) { let r = 0; for (let j = 0; j < 8; j++) { const bit = (s ^ (s >> 2) ^ (s >> 3) ^ (s >> 5)) & 1; s = (s >> 1) | (bit << 15); r = (r << 1) | (s & 1); } seq[i] = r; }
+  _scrCache.n = seq.length; _scrCache.seq = seq; return seq;
+}
+function scramble(bytes) { const q = scrambleSeq(bytes.length), o = new Uint8Array(bytes.length); for (let i = 0; i < bytes.length; i++) o[i] = bytes[i] ^ q[i]; return o; }
+
+/*═══ CRC-8 / CRC-32 ═══*/
+function crc8(arr) { let c = 0; for (const b of arr) { c ^= b; for (let j = 0; j < 8; j++) c = (c & 0x80) ? ((c << 1) ^ 0x07) & 0xFF : (c << 1) & 0xFF; } return c; }
+const _crcT = (() => { const t = new Uint32Array(256); for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1); t[n] = c >>> 0; } return t; })();
+function crc32(d) { let c = 0xFFFFFFFF; for (let i = 0; i < d.length; i++) c = _crcT[(c ^ d[i]) & 0xFF] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; }
+
+/*═══ 톤 방식 · HDR ═══*/
+const TONE_MODES = [
+  { S: 1, W: 4, name: '싱글' },   /* 16톤 중 1개 */
+  { S: 2, W: 6, name: '듀얼' },   /* 하위 8 중 1 + 상위 8 중 1 */
+  { S: 4, W: 8, name: '쿼드' }    /* 4톤씩 4묶음에서 각 1개 = 1바이트/그룹 */
+];
+const HDR_NIB = 8, HDR_SLOTS = 24;          /* 4바이트 = 8니블 × 3사본 */
+function hdrBytes(L, mode, rsT) {
+  const fl = 0x10 | (mode & 3) | (RS_TS.indexOf(rsT) << 2);
+  const b = [(L >> 8) & 0xFF, L & 0xFF, fl]; b.push(crc8(b) ^ 0x5A);
+  return b;
+}
+function hdrParse(by) {
+  if (by.length < 4 || (crc8([by[0], by[1], by[2]]) ^ 0x5A) !== by[3]) return null;
+  const fl = by[2];
+  if ((fl & 0xE0) || !(fl & 0x10)) return null;
+  const mode = fl & 3; if (mode > 2) return null;
+  const rsT = RS_TS[(fl >> 2) & 3], L = (by[0] << 8) | by[1];
+  if (!lenPlausible(L, rsT)) return null;
+  return { L, mode, rsT };
+}
+/* HDR 슬롯 k(=sym*G+g) → 니블 인덱스: 같은 니블의 3사본이 서로 다른 그룹에 오도록 */
+const _hmCache = {};
+function hdrMap(G) {
+  if (_hmCache[G]) return _hmCache[G];
+  let best = null;
+  for (let sh = 1; sh < HDR_NIB && !best; sh++) {
+    const map = []; for (let k = 0; k < HDR_SLOTS; k++) map.push(((k % HDR_NIB) + ((k / HDR_NIB) | 0) * sh) % HDR_NIB);
+    let good = true;
+    for (let i = 0; i < HDR_NIB && good; i++) { const gs = new Set(); for (let k = 0; k < HDR_SLOTS; k++) if (map[k] === i) gs.add(k % G); if (gs.size < Math.min(3, G)) good = false; }
+    if (good) best = map;
+  }
+  return (_hmCache[G] = best || Array.from({ length: HDR_SLOTS }, (_, k) => k % HDR_NIB));
+}
+function bytesToNibbles(bytes) { const n = []; for (const b of bytes) n.push((b >> 4) & 15, b & 15); return n; }
+function nibblesToBytes(nib) { const b = []; for (let i = 0; i + 1 < nib.length; i += 2) b.push(((nib[i] & 15) << 4) | (nib[i + 1] & 15)); return b; }
+/* W비트 단위 묶기/풀기 (W = 4·6·8) */
+function packBits(bytes, W) {
+  const vals = [], mk = (1 << W) - 1; let acc = 0, nb = 0;
+  for (const b of bytes) { acc = ((acc << 8) | b) & 0xFFFFFF; nb += 8; while (nb >= W) { vals.push((acc >> (nb - W)) & mk); nb -= W; } }
+  if (nb > 0) vals.push((acc << (W - nb)) & mk);
+  return vals;
+}
+function unpackBits(vals, W, nBytes) {
+  const out = new Uint8Array(nBytes); let acc = 0, nb = 0, oi = 0;
+  for (const v of vals) {
+    acc = ((acc << W) | v) & 0xFFFFFF; nb += W;
+    while (nb >= 8 && oi < nBytes) { out[oi++] = (acc >> (nb - 8)) & 0xFF; nb -= 8; }
+    if (oi >= nBytes) break;
+  }
+  return out;
+}
+/* 심볼 단위 신뢰도 → 바이트 단위 신뢰도 (바이트를 이루는 심볼 중 최솟값) */
+function unitScoresToBytes(sc, W, nBytes) {
+  const o = new Float32Array(nBytes);
+  for (let i = 0; i < nBytes; i++) { const u0 = Math.floor(i * 8 / W), u1 = Math.floor((i * 8 + 7) / W); let s = 1e9; for (let u = u0; u <= u1 && u < sc.length; u++) s = Math.min(s, sc[u]); o[i] = s === 1e9 ? 0 : s; }
+  return o;
+}
+/*═══ LZ77 hash-chain / CRC-16 / PACKET ═══*/
+function compress(inp) {
+  const b = (inp instanceof Uint8Array) ? inp : new TextEncoder().encode(inp);
+  const n = b.length; if (!n) return new Uint8Array(0);
+  const HB = 1 << 16, head = new Int32Array(HB).fill(-1), prev = new Int32Array(n).fill(-1);
+  const h = i => (((b[i] << 8) ^ (b[i + 1] << 4) ^ b[i + 2]) & (HB - 1));
+  const o = []; let i = 0;
+  const insert = p => { if (p + 2 < n) { const k = h(p); prev[p] = head[k]; head[k] = p; } };
+  while (i < n) {
+    let bl = 0, bd = 0;
+    if (i + 2 < n) {
+      let j = head[h(i)], tries = 32;
+      const maxL = Math.min(n - i, 31);
+      while (j >= 0 && tries-- > 0) {
+        const d = i - j;
+        if (d > 255) break;
+        if (d >= 1) { let l = 0; while (l < maxL && b[i + l] === b[j + l]) l++; if (l > bl) { bl = l; bd = d; if (l >= maxL) break; } }
+        j = prev[j];
+      }
+    }
+    if (bl >= 3) { o.push(0xFE, bd, bl); const end = i + bl; while (i < end) { insert(i); i++; } }
+    else { if (b[i] === 0xFE) o.push(0xFE, 0, 0); else o.push(b[i]); insert(i); i++; }
+  }
+  return new Uint8Array(o);
+}
+function decompress(d) {
+  if (!d || !d.length) return new Uint8Array(0);
+  const o = []; let i = 0;
+  while (i < d.length) {
+    if (d[i] === 0xFE) { i++; if (i + 1 >= d.length) break; const x = d[i++], y = d[i++]; if (!x && !y) o.push(0xFE); else for (let j = 0; j < y; j++) o.push(o[o.length - x]); }
+    else o.push(d[i++]);
+  }
+  return new Uint8Array(o);
+}
+function crc16(d) { let c = 0xFFFF; for (let i = 0; i < d.length; i++) { c ^= d[i]; for (let j = 0; j < 8; j++) c = (c & 1) ? ((c >> 1) ^ 0xA001) : (c >> 1); } return c & 0xFFFF; }
+/* 파일명을 UTF-8 60바이트 이내로: 확장자는 남기고 이름 부분을 글자 단위로 자른다 */
+function nameBytes(name) {
+  const te = new TextEncoder();
+  const nb = te.encode(name);
+  if (nb.length <= 60) return nb;
+  const dot = name.lastIndexOf('.');
+  let ext = dot > 0 ? name.slice(dot) : '';
+  if (te.encode(ext).length > 12) ext = '';
+  const stem = Array.from(ext ? name.slice(0, dot) : name);
+  while (stem.length && te.encode(stem.join('') + ext).length > 60) stem.pop();
+  return te.encode(stem.join('') + ext);
+}
+function buildPkt(type, data, name) {
+  const nb = name ? nameBytes(name) : new Uint8Array(0);
+  const body = new Uint8Array(2 + nb.length + data.length);
+  body[0] = type; body[1] = nb.length;
+  if (nb.length) body.set(nb, 2);
+  body.set(data, 2 + nb.length);
+  const crc = crc16(body);
+  const pkt = new Uint8Array(body.length + 2);
+  pkt.set(body); pkt[body.length] = (crc >> 8) & 0xFF; pkt[body.length + 1] = crc & 0xFF;
+  return pkt;
+}
+function parsePkt(bytes) {
+  if (bytes.length < 4) return null;
+  const type = bytes[0], nLen = bytes[1];
+  if (type < 1 || type > 4) return null;
+  if (nLen > 60 || 2 + nLen > bytes.length - 2) return null;
+  const name = nLen > 0 ? new TextDecoder().decode(new Uint8Array(bytes.slice(2, 2 + nLen))) : '';
+  const data = bytes.slice(2 + nLen, bytes.length - 2);
+  const rc = (bytes[bytes.length - 2] << 8) | bytes[bytes.length - 1];
+  const cc = crc16(new Uint8Array(bytes.slice(0, bytes.length - 2)));
+  return { type, name, data: new Uint8Array(data), crcOk: rc === cc };
+}
+/*═══ 한글 컴팩트 코덱 (UTF-8 3B → 2B) ═══*/
+function koEnc(str) {
+  const out = [];
+  for (const ch of str) {
+    const cp = ch.codePointAt(0);
+    if (cp < 0x80) out.push(cp);
+    else if (cp >= 0xAC00 && cp <= 0xD7A3) { const v = cp - 0xAC00; out.push(0x80 | (v >> 8), v & 0xFF); }
+    else out.push(0xF4, (cp >> 16) & 0xFF, (cp >> 8) & 0xFF, cp & 0xFF);
+  }
+  return new Uint8Array(out);
+}
+function koDec(bytes) {
+  let s = '', i = 0;
+  while (i < bytes.length) {
+    const b = bytes[i];
+    if (b < 0x80) { s += String.fromCharCode(b); i++; }
+    else if (b <= 0xAB) { if (i + 1 >= bytes.length) break; s += String.fromCharCode(0xAC00 + (((b & 0x3F) << 8) | bytes[i + 1])); i += 2; }
+    else if (b === 0xF4) { if (i + 3 >= bytes.length) break; s += String.fromCodePoint((bytes[i + 1] << 16) | (bytes[i + 2] << 8) | bytes[i + 3]); i += 4; }
+    else i++;
+  }
+  return s;
+}
+/* 텍스트 → 최적 페이로드: UTF-8+LZ vs 한글컴팩트+LZ 중 작은 쪽 */
+function encodeTextBest(text) {
+  const u = compress(text);
+  const k = compress(koEnc(text));
+  return k.length < u.length ? { data: k, type: 0x03 } : { data: u, type: 0x01 };
+}
+
+
+/*═══ MODEM ═══
+  각 심볼 = gs(보호구간, 앞쪽) + sps(복조창) — 복조는 뒤쪽 sps 구간만 사용 */
+const BANDS = {
+  mid:   { lo: 5500,  hi: 8000,  label: '비간섭' },
+  ultra: { lo: 12000, hi: 16000, label: '준초음파' }
+};
+/* 속도 프로필: 보호구간(guard)이 길수록 늦게 도착하는 반사음(벽·책상)이 복조창에 섞이지 않는다 */
+const SPD = {
+  fast:   { baud: 46.875,  spacing: 46.875, guard: 0.25, label: '빠름' },   /* = v14 표준 (보호 5ms) */
+  std:    { baud: 46.875,  spacing: 46.875, guard: 0.5,  label: '표준' },   /* 보호 11ms */
+  stable: { baud: 23.4375, spacing: 46.875, guard: 0.5,  label: '안정' }    /* 보호 21ms */
+};
+const TAIL_SYMS = 1, TRAIN_SYMS = 2, PROBE_SYMS = 2;
+const GUARD_FRAC = 0.25;
+const CHIRP_SEC = 0.08, CHIRP_GAP_SEC = 0.01, CHIRP_PAIRS = 2;
+const LEAD_SEC = 0.03, WAKE_SEC = 0.12;
+const CH_TH = 0.22, CH_DN_TH = 0.15, DN_REL = 0.4, DN_RNG = 128;
+const TRAIN_MIN = 0.12;
+const DFE_KS = [1.0, 0.5, 0], DFE_FLOOR = 0.05, A1_MIX = 0.7;
+const QUIET_SEC = 0.5, QUIET_FRAC = 0.15;
+const PEAK_T = 0.97, PEAK_TRIALS = 12, PK_K = 1.9;
+const CONF_LOW = 2.0;                               /* LLR 차이가 이보다 작으면 '불확실' */
+function allocGroups(bandLo, bandHi, spacing) {
+  const usable = bandHi - bandLo - 100;
+  const G = Math.max(1, Math.floor(usable / (NT * spacing)));
+  const groups = [];
+  for (let g = 0; g < G; g++) { const base = bandLo + 50 + g * NT * spacing, tones = []; for (let t = 0; t < NT; t++) tones.push(base + t * spacing); groups.push({ base, tones }); }
+  return groups;
+}
+function modemTiming(sr, baud, guard) {
+  const sps = Math.round(sr / baud), gs = Math.round(sps * (guard ?? GUARD_FRAC));
+  return { sps, gs, sym: sps + gs, Lc: Math.round(sr * CHIRP_SEC), Lg: Math.round(sr * CHIRP_GAP_SEC) };
+}
+function preambleLen(tm, sr) { return Math.round(sr * LEAD_SEC) + Math.round(sr * WAKE_SEC) + tm.Lg + CHIRP_PAIRS * 2 * (tm.Lc + tm.Lg); }
+function chirpBand(groups) { return [groups[0].tones[0] - 30, groups[groups.length - 1].tones[NT - 1] + 30]; }
+function chirpWave(sr, f0, f1, L, up, quad) {
+  const w = new Float32Array(L), T = L / sr, k = (f1 - f0) / T, tp = Math.round(sr * 0.004);
+  for (let n = 0; n < L; n++) {
+    const t = n / sr, ph = up ? 2 * Math.PI * (f0 * t + k * t * t / 2) : 2 * Math.PI * (f1 * t - k * t * t / 2);
+    let a = 1;
+    if (n < tp) a = 0.5 - 0.5 * Math.cos(Math.PI * n / tp);
+    else if (n > L - 1 - tp) a = 0.5 - 0.5 * Math.cos(Math.PI * (L - 1 - n) / tp);
+    w[n] = a * (quad ? Math.cos(ph) : Math.sin(ph));
+  }
+  return w;
+}
+/* 동시 톤 n개일 때 톤당 진폭 (심볼별 위상 선택으로 피크를 PEAK_T 이하로 맞춘다) */
+function pkFac(n) { return n <= 3 ? n : Math.min(n, PK_K * Math.sqrt(n)); }
+function ampPlan(G, mode) { const S = TONE_MODES[mode].S; return { aD: 0.95 / pkFac(S * G), aL: 0.95 / pkFac(G) }; }
+function frameLayout(payloadLen, G, mode) {
+  const hdrSyms = Math.ceil(HDR_SLOTS / G), W = TONE_MODES[mode].W;
+  const dataUnits = Math.ceil(payloadLen * 8 / W), dataSyms = Math.ceil(dataUnits / G);
+  return { hdrSyms, dataSyms, dataUnits, nSyms: TRAIN_SYMS + PROBE_SYMS + hdrSyms + dataSyms + TAIL_SYMS };
+}
+function frameDurSec(payloadLen, G, mode, sr, baud, guard) {
+  const tm = modemTiming(sr, baud, guard), lay = frameLayout(payloadLen, G, mode);
+  return (preambleLen(tm, sr) + lay.nSyms * tm.sym + Math.round(sr * 0.03)) / sr;
+}
+function mulberry32(a) { return function () { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+/* FFT (radix-2, in-place) */
+function fftIP(re, im, inv) {
+  const n = re.length;
+  for (let i = 1, j = 0; i < n; i++) {
+    let bit = n >> 1;
+    for (; j & bit; bit >>= 1) j ^= bit;
+    j ^= bit;
+    if (i < j) { let t = re[i]; re[i] = re[j]; re[j] = t; t = im[i]; im[i] = im[j]; im[j] = t; }
+  }
+  for (let len = 2; len <= n; len <<= 1) {
+    const ang = 2 * Math.PI / len * (inv ? 1 : -1), wr = Math.cos(ang), wi = Math.sin(ang), h = len >> 1;
+    for (let i = 0; i < n; i += len) {
+      let cr = 1, ci = 0;
+      for (let k = 0; k < h; k++) {
+        const a = i + k, b = a + h;
+        const xr = re[b] * cr - im[b] * ci, xi = re[b] * ci + im[b] * cr;
+        re[b] = re[a] - xr; im[b] = im[a] - xi; re[a] += xr; im[a] += xi;
+        const ncr = cr * wr - ci * wi; ci = cr * wi + ci * wr; cr = ncr;
+      }
+    }
+  }
+  if (inv) for (let i = 0; i < n; i++) { re[i] /= n; im[i] /= n; }
+}
+function biquad(type, f, sr) {
+  const w = 2 * Math.PI * f / sr, c = Math.cos(w), s = Math.sin(w), al = s / (2 * 0.7071);
+  const a0 = 1 + al; let b0, b1, b2;
+  if (type === 'lp') { b0 = (1 - c) / 2; b1 = 1 - c; b2 = (1 - c) / 2; } else { b0 = (1 + c) / 2; b1 = -(1 + c); b2 = (1 + c) / 2; }
+  return { b0: b0 / a0, b1: b1 / a0, b2: b2 / a0, a1: -2 * c / a0, a2: (1 - al) / a0, x1: 0, x2: 0, y1: 0, y2: 0 };
+}
+function bqRun(q, x) { const y = q.b0 * x + q.b1 * q.x1 + q.b2 * q.x2 - q.a1 * q.y1 - q.a2 * q.y2; q.x2 = q.x1; q.x1 = x; q.y2 = q.y1; q.y1 = y; return y; }
+
+
+/*═══ TX ═══
+  cfg = { sr, baud, guard, vol, groups, mode(0 싱글·1 듀얼·2 쿼드), rsT, tilt(dB) }  — payload 는 RS 인코딩된 바이트 */
+function synthesize(payload, cfg) {
+  const { sr, baud, vol, groups, rsT } = cfg, mode = cfg.mode || 0, tilt = cfg.tilt || 0;
+  const G = groups.length, tm = modemTiming(sr, baud, cfg.guard), sym = tm.sym, sps = tm.sps;
+  const TMd = TONE_MODES[mode], S = TMd.S, M = NT / S, bb = Math.log2(M), W = TMd.W;
+  const lay = frameLayout(payload.length, G, mode);
+  const lead = Math.round(sr * LEAD_SEC), Lw = Math.round(sr * WAKE_SEC);
+  const s0 = preambleLen(tm, sr);
+  const total = s0 + lay.nSyms * sym + Math.round(sr * 0.03);
+  const d = new Float32Array(total);
+  const [f0, f1] = chirpBand(groups);
+  const camp = Math.min(vol * 0.8, 0.9);
+  /* 웨이크업 톤 */
+  const ww = 2 * Math.PI * ((f0 + f1) / 2) / sr, wIn = Math.round(sr * 0.03), wOut = Math.round(sr * 0.01);
+  for (let n = 0; n < Lw; n++) {
+    let a = camp * 0.5;
+    if (n < wIn) a *= 0.5 - 0.5 * Math.cos(Math.PI * n / wIn);
+    else if (n > Lw - 1 - wOut) a *= 0.5 - 0.5 * Math.cos(Math.PI * (Lw - 1 - n) / wOut);
+    d[lead + n] = a * Math.sin(ww * n);
+  }
+  /* 처프 쌍 ×2 */
+  const up = chirpWave(sr, f0, f1, tm.Lc, true), dn = chirpWave(sr, f0, f1, tm.Lc, false);
+  let c0 = lead + Lw + tm.Lg;
+  for (let p = 0; p < CHIRP_PAIRS; p++, c0 += 2 * (tm.Lc + tm.Lg))
+    for (let n = 0; n < tm.Lc; n++) { d[c0 + n] += camp * up[n]; d[c0 + tm.Lc + tm.Lg + n] += camp * dn[n]; }
+  /* 톤 기울기(프리엠퍼시스) */
+  const ft = groups[0].tones[0], fl = groups[G - 1].tones[NT - 1], fc = (ft + fl) / 2;
+  const tg = f => tilt ? Math.pow(10, tilt * ((f - fc) / (fl - ft)) / 20) : 1;
+  /* 심볼 포락선 */
+  const rA = Math.max(8, Math.round(tm.gs * 0.5)), rB = Math.max(8, Math.round(sps / 40));
+  const env = new Float32Array(sym);
+  for (let s = 0; s < sym; s++) { let a = 1; if (s < rA) a = (1 - Math.cos(Math.PI * s / rA)) / 2; else if (s > sym - rB) a = (1 - Math.cos(Math.PI * (sym - s) / rB)) / 2; env[s] = a; }
+  let bufA = new Float32Array(sym), bufB = new Float32Array(sym);
+  /* 한 심볼 쓰기: 위상 조합을 여러 번 뽑아 피크가 가장 낮은 것을 쓴다 (수신은 크기만 보므로 위상은 자유) */
+  function writeSym(si, freqs, amp, phases) {
+    const off = s0 + si * sym;
+    let bp = 1e9, best = null;
+    const trials = phases ? 1 : (freqs.length <= 3 ? 1 : PEAK_TRIALS);
+    const rnd = mulberry32(si * 2654435761 + 12345);
+    for (let tr = 0; tr < trials; tr++) {
+      const b = best === bufA ? bufB : bufA; b.fill(0);
+      for (let i = 0; i < freqs.length; i++) {
+        const f = freqs[i], a = amp * tg(f), w = 2 * Math.PI * f / sr, ph = phases ? phases[i] : rnd() * 2 * Math.PI;
+        const cr = Math.cos(w), ci = Math.sin(w); let xr = Math.cos(ph), xi = Math.sin(ph);
+        for (let s = 0; s < sym; s++) { b[s] += a * xi; const nr = xr * cr - xi * ci; xi = xr * ci + xi * cr; xr = nr; }
+      }
+      let pk = 0; for (let s = 0; s < sym; s++) { const v = Math.abs(b[s] * env[s]); if (v > pk) pk = v; }
+      if (pk < bp) { bp = pk; best = b; }
+      if (bp <= PEAK_T) break;
+    }
+    const sc = bp > PEAK_T ? PEAK_T / bp : 1;
+    for (let s = 0; s < sym; s++) d[off + s] += best[s] * env[s] * sc;
+    return bp * sc;
+  }
+  /* 송신 그래프용: 심볼마다 켜지는 톤 번호(g*16+t) */
+  const vizT = new Array(lay.nSyms);
+  let si = 0;
+  /* 학습 A=짝수톤, B=홀수톤 (뉴먼 위상) → 전체를 피크 0.92·vol 로 정규화 */
+  const tStart = s0;
+  for (let s = 0; s < TRAIN_SYMS; s++, si++) {
+    const fr = [], ph = []; let k = 0; const nOn = (NT / 2) * G;
+    for (let g = 0; g < G; g++) for (let t = s & 1; t < NT; t += 2, k++) { fr.push(groups[g].tones[t]); ph.push(Math.PI * k * k / nOn); }
+    writeSym(si, fr, 1, ph);
+    const ix = []; for (let g = 0; g < G; g++) for (let t = s & 1; t < NT; t += 2) ix.push(g * NT + t); vizT[si] = ix;
+  }
+  { let pk = 0; const e = tStart + TRAIN_SYMS * sym; for (let i = tStart; i < e; i++) pk = Math.max(pk, Math.abs(d[i])); const k = pk > 0 ? 0.92 * vol / pk : 1; for (let i = tStart; i < e; i++) d[i] *= k; }
+  si += PROBE_SYMS;
+  const ap = ampPlan(G, mode), aL = ap.aL * vol, aD = ap.aD * vol;
+  /* HDR: 싱글톤, 4바이트 × 3사본 */
+  const hn = bytesToNibbles(hdrBytes(payload.length, mode, rsT)), hm = hdrMap(G);
+  for (let s = 0; s < lay.hdrSyms; s++, si++) {
+    const fr = [], ix = []; for (let g = 0; g < G; g++) { const k = s * G + g, t = k < HDR_SLOTS ? hn[hm[k]] : 0; fr.push(groups[g].tones[t]); ix.push(g * NT + t); }
+    writeSym(si, fr, aL); vizT[si] = ix;
+  }
+  /* DATA: 스크램블 → W비트 묶음 → 묶음마다 M톤 중 1개씩 S개 */
+  const vals = packBits(scramble(payload), W), dm = M - 1;
+  for (let s = 0; s < lay.dataSyms; s++, si++) {
+    const fr = [], ix = [];
+    for (let g = 0; g < G; g++) {
+      const k = s * G + g, v = k < vals.length ? vals[k] : 0;
+      for (let q = 0; q < S; q++) { const t = q * M + ((v >> (bb * (S - 1 - q))) & dm); fr.push(groups[g].tones[t]); ix.push(g * NT + t); }
+    }
+    writeSym(si, fr, aD); vizT[si] = ix;
+  }
+  for (let s = 0; s < TAIL_SYMS; s++, si++) { writeSym(si, groups.map(gr => gr.tones[0]), aL); vizT[si] = groups.map((_, g) => g * NT); }
+  const viz = { s0, sym, G, mode, lay, tones: vizT, lead, Lw, Lc: tm.Lc, Lg: tm.Lg, f0, f1, fLo: groups[0].tones[0], fHi: groups[G - 1].tones[NT - 1] };
+  return { samples: d, totalSyms: lay.nSyms, durSec: total / sr, viz };
+}
+
+/*═══ 톤 검출기 ═══
+  톤마다 '켜짐 μ', '꺼짐 ν' 수준을 가지고, 관측 크기 x 에 대해
+  LLR = [켜짐일 가능성] − [꺼짐일 가능성] 을 계산해 묶음(M톤)마다 최댓값을 고른다.
+  · 깊은 널(μ≈ν) 톤은 강제로 키우지 않으므로 다른 톤의 잡음·잔향이 그 톤을 이기지 못한다
+  · 'llr'  : 데이터 중에도 μ·ν 를 결정지향으로 추적
+  · 'llrNA': 추적 없음
+  · 'zf'   : (x−ν)/이득 비교 (기존 방식에 가까움) */
+class ToneDet {
+  constructor(G, mode, mu, nu, kind, grel) {
+    this.G = G; this.S = TONE_MODES[mode].S; this.M = NT / this.S; this.bb = Math.log2(this.M);
+    this.mu = mu; this.nu = nu; this.kind = kind; this.grel = grel;
+    this.nu0 = nu.map(a => Float32Array.from(a));
+    this._sc = new Float64Array(NT);
+  }
+  score(g, t, x) {
+    const u = this.mu[g][t], v = this.nu[g][t];
+    if (this.kind === 'zf') return Math.max(0, x - v) / Math.max(0.12, this.grel[g][t]);
+    const so = 0.5 * v + 0.05 * u + 1e-9, sn = Math.max(1.3 * so, 0.6 * v + 0.22 * u);
+    const dOff = Math.max(0, x - v), dOn = Math.max(0, u - x);
+    return dOff * dOff / (2 * so * so) - dOn * dOn / (2 * sn * sn) + Math.log(so / sn);
+  }
+  step(m) {
+    const G = this.G, S = this.S, M = this.M, sc = this._sc, vals = [], conf = [], tones = [];
+    for (let g = 0; g < G; g++) {
+      let v = 0, cmin = 1e9; const tn = [];
+      for (let t = 0; t < NT; t++) sc[t] = this.score(g, t, m[g][t]);
+      for (let q = 0; q < S; q++) {
+        const b0 = q * M; let bt = b0, best = -1e18, sec = -1e18;
+        for (let t = b0; t < b0 + M; t++) { const s = sc[t]; if (s > best) { sec = best; best = s; bt = t; } else if (s > sec) sec = s; }
+        let c = best - sec;
+        if (this.kind === 'zf') c = best > 0 ? 10 * c / best : 0;
+        v = (v << this.bb) | (bt - b0); tn.push(bt); if (c < cmin) cmin = c;
+        if (this.kind === 'llr') {
+          const mu = this.mu[g], nu = this.nu[g], x = m[g];
+          if (c > 3) { const xc = Math.min(2.5 * mu[bt], Math.max(0.4 * mu[bt], x[bt])); mu[bt] += 0.12 * (xc - mu[bt]); }
+          if (c > 1.5) for (let t = b0; t < b0 + M; t++) if (t !== bt) {
+            const xc = Math.min(x[t], 3 * nu[t] + 0.05 * mu[t]);
+            nu[t] += 0.04 * (xc - nu[t]); if (nu[t] < 0.5 * this.nu0[g][t]) nu[t] = 0.5 * this.nu0[g][t];
+          }
+          if (mu[bt] < 1.2 * nu[bt]) mu[bt] = 1.2 * nu[bt];
+        }
+      }
+      vals.push(v); conf.push(cmin); tones.push(tn);
+    }
+    return { vals, conf, tones };
+  }
+}
+
+/*═══ RX ═══
+  상태: SEARCH(처프) → REFINE(up/down 정밀) → GATE(학습 대비로 쌍 판정·오검출 차단)
+        → TRAIN(ppm·이득·잔향·잡음바닥) → HDR(길이·톤방식·RS) → DATA → (완료 즉시 SEARCH) */
+class Demod {
+  constructor(cfg) {
+    this.sr = cfg.sr; this.baud = cfg.baud; this.groups = cfg.groups; this.G = cfg.groups.length;
+    this.cb = cfg.cb || {};
+    this.guard = cfg.guard ?? GUARD_FRAC;
+    const tm = modemTiming(this.sr, this.baud, this.guard);
+    Object.assign(this, { sps: tm.sps, gs: tm.gs, sym: tm.sym, Lc: tm.Lc, Lg: tm.Lg });
+    this.P = 2 * (this.Lc + this.Lg);
+    this.quietMax = Math.max(6, Math.ceil(QUIET_SEC * this.sr / this.sym));
+    this.finSeq = 0;
+    this.dT = Math.max(16, Math.round(this.gs / 4));
+    this.stepB = Math.max(2, this.sps >> 8); this.stepS = Math.max(1, this.sps >> 10);
+    this.ring = new Float32Array(1 << 20); this.mask = this.ring.length - 1;
+    this.wAbs = 0; this.rPos = 0;
+    const [f0, f1] = chirpBand(this.groups);
+    this.bq = [biquad('hp', f0 * 0.8, this.sr), biquad('lp', Math.min(f1 * 1.15, this.sr * 0.45), this.sr)];
+    this.up = chirpWave(this.sr, f0, f1, this.Lc, true);
+    this.dnS = chirpWave(this.sr, f0, f1, this.Lc, false); this.dnC = chirpWave(this.sr, f0, f1, this.Lc, false, true);
+    let N = 1; while (N < 2 * this.Lc) N <<= 1; this.N = N;
+    this._re = new Float64Array(N); this._im = new Float64Array(N); this._e = new Float64Array(N + 1);
+    const tr = new Float64Array(N), ti = new Float64Array(N); tr.set(this.up); fftIP(tr, ti, false);
+    for (let k = 0; k < N; k++) { const f = k === 0 || k === N / 2 ? 1 : k < N / 2 ? 2 : 0; tr[k] *= f; ti[k] *= f; }
+    this.upFr = tr; this.upFi = ti;
+    this.Et = 0; for (const v of this.up) this.Et += v * v;
+    this.Ed = 0; for (const v of this.dnS) this.Ed += v * v;
+    this._buf = new Float32Array(this.sps);
+    this.reset();
+  }
+  log(m) { if (this.cb.log) this.cb.log(m); }
+  setCoeffs(r) { this.ratio = r; this.coeffs = this.groups.map(gr => gr.tones.map(f => 2 * Math.cos(2 * Math.PI * f * r / this.sr))); }
+  push(samples) {
+    const q0 = this.bq[0], q1 = this.bq[1];
+    for (let i = 0; i < samples.length; i++) this.ring[(this.wAbs + i) & this.mask] = bqRun(q1, bqRun(q0, samples[i]));
+    this.wAbs += samples.length;
+    if (this.state === 'SEARCH' && this.wAbs - this.rPos > this.ring.length - 8192) this.rPos = this.wAbs - this.ring.length + 8192;
+    this.process();
+  }
+  flush() { this.reset(); this.rPos = this.wAbs; }
+  window(pos) { const b = this._buf, p0 = Math.floor(pos); for (let i = 0; i < this.sps; i++) b[i] = this.ring[(p0 + i) & this.mask]; return b; }
+  gzF(buf, freq) {
+    const co = 2 * Math.cos(2 * Math.PI * freq / this.sr); let s1 = 0, s2 = 0;
+    for (let i = 0; i < buf.length; i++) { const s0 = buf[i] + co * s1 - s2; s2 = s1; s1 = s0; }
+    return Math.sqrt(Math.max(0, s1 * s1 + s2 * s2 - co * s1 * s2)) / buf.length;
+  }
+  gz(buf, g, t) {
+    const co = this.coeffs[g][t]; let s1 = 0, s2 = 0;
+    for (let i = 0; i < buf.length; i++) { const s0 = buf[i] + co * s1 - s2; s2 = s1; s1 = s0; }
+    return Math.sqrt(Math.max(0, s1 * s1 + s2 * s2 - co * s1 * s2)) / buf.length;
+  }
+  rawMags(pos) {
+    const buf = this.window(pos), out = [];
+    for (let g = 0; g < this.G; g++) { const m = new Float32Array(NT); for (let t = 0; t < NT; t++) m[t] = this.gz(buf, g, t); out.push(m); }
+    return out;
+  }
+  trainContrast(p0) {
+    let on = 0, off = 0;
+    for (let k = 0; k < TRAIN_SYMS; k++) {
+      const buf = this.window(p0 + k * this.sym);
+      for (let g = 0; g < this.G; g++) for (let t = 0; t < NT; t++) { const v = this.gz(buf, g, t); if ((t & 1) === (k & 1)) on += v; else off += v; }
+    }
+    return on + off > 1e-12 ? (on - off) / (on + off) : 0;
+  }
+  /* 잔향 소거: E[n+1] = a1·D[n] + ρ·E[n],  D = max(floor·raw, raw − K·E)  (이득 보정은 검출기에서) */
+  cleanWith(raw, K, echo, ec) {
+    const out = [];
+    for (let g = 0; g < this.G; g++) {
+      const m = new Float32Array(NT), e = echo[g], a1 = (ec || this.ec)[g].a1t, rho = (ec || this.ec)[g].rho;
+      for (let t = 0; t < NT; t++) { const r = raw[g][t], d = Math.max(DFE_FLOOR * r, r - K * e[t]); e[t] = a1[t] * d + rho * e[t]; m[t] = d; }
+      out.push(m);
+    }
+    return out;
+  }
+  clean(raw) { this.hist.push(raw); const m = this.cleanWith(raw, DFE_KS[0], this.echo); this.clh.push(m); return m; }
+  replay(K, ec) { if (K === DFE_KS[0] && !ec) return this.clh; const echo = this.groups.map(() => new Float32Array(NT)); return this.hist.map(r => this.cleanWith(r, K, echo, ec)); }
+  eqL(m) { return m.map((a, g) => a.map((v, t) => v * this.eqZ[g][t])); }
+  detS(m) {
+    let mx = 0, mt = 0, sum = 0;
+    for (let t = 0; t < NT; t++) { sum += m[t]; if (m[t] > mx) { mx = m[t]; mt = t; } }
+    const rest = (sum - mx) / (NT - 1), snr = rest > 1e-9 ? mx / rest : 99;
+    return { nib: mt, tones: [mt], mag: mx, snr, ok: snr > 2.2 && mx > 3e-4 };
+  }
+  /* 학습·HDR 로 검출기 초기화. HDR 의 실제 톤을 알고 있으므로 켜짐 수준의 절대 크기를 보정할 수 있다 */
+  makeDet(clHdr, nibs, kind) {
+    const G = this.G, lm = hdrMap(G), ap = ampPlan(G, this.mode), rDL = ap.aD / ap.aL;
+    let son = 0, strn = 0;
+    const offS = this.groups.map(() => new Float64Array(NT)), offN = this.groups.map(() => new Float64Array(NT));
+    for (let s = 0; s < clHdr.length; s++) for (let g = 0; g < G; g++) {
+      const k = s * G + g, tone = k < HDR_SLOTS ? nibs[lm[k]] : 0, m = clHdr[s][g];
+      son += m[tone]; strn += this.trm[g][tone];
+      for (let t = 0; t < NT; t++) if (t !== tone) { offS[g][t] += m[t]; offN[g][t]++; }
+    }
+    const c = strn > 0 ? son / strn : 1;
+    const mu = [], nu = [];
+    for (let g = 0; g < G; g++) {
+      const u = new Float32Array(NT), v = new Float32Array(NT), nf = this.nf[g];
+      for (let t = 0; t < NT; t++) {
+        const off = offN[g][t] ? offS[g][t] / offN[g][t] : nf;
+        v[t] = nf + Math.max(0, off - nf) * Math.min(1, rDL) + 1e-7;
+        u[t] = Math.max(this.trm[g][t] * c * rDL, 1.2 * v[t]);
+      }
+      mu.push(u); nu.push(v);
+    }
+    return new ToneDet(G, this.mode, mu, nu, kind, this.gain);
+  }
+  corrBlock(pos) {
+    const N = this.N, Lc = this.Lc, re = this._re, im = this._im, e = this._e;
+    e[0] = 0;
+    for (let i = 0; i < N; i++) { const v = this.ring[(pos + i) & this.mask]; re[i] = v; im[i] = 0; e[i + 1] = e[i] + v * v; }
+    fftIP(re, im, false);
+    const ur = this.upFr, ui = this.upFi;
+    for (let k = 0; k < N; k++) { const a = re[k], b = im[k]; re[k] = a * ur[k] + b * ui[k]; im[k] = b * ur[k] - a * ui[k]; }
+    fftIP(re, im, true);
+    let best = 0, bl = 0;
+    for (let l = 0; l <= N - Lc; l++) {
+      const E = e[l + Lc] - e[l]; if (E < 1e-12) continue;
+      const rho = Math.sqrt(re[l] * re[l] + im[l] * im[l]) / Math.sqrt(this.Et * E);
+      if (rho > best) { best = rho; bl = l; }
+    }
+    return { lag: bl, rho: best };
+  }
+  dnRho(pos) {
+    let s = 0, c = 0, E = 0;
+    for (let i = 0; i < this.Lc; i++) { const v = this.ring[(pos + i) & this.mask]; s += v * this.dnS[i]; c += v * this.dnC[i]; E += v * v; }
+    return E < 1e-12 ? 0 : Math.sqrt(s * s + c * c) / Math.sqrt(this.Ed * E);
+  }
+  track(pos, tones, raw) {
+    let mM = 0, eM = 0, lM = 0;
+    const eb = this.window(pos - this.dT).slice(), lb = this.window(pos + this.dT);
+    for (let g = 0; g < this.G; g++) for (const t of tones[g]) { mM += raw[g][t]; eM += this.gz(eb, g, t); lM += this.gz(lb, g, t); }
+    if (eM > mM * 1.03 && eM > lM) return -this.stepB;
+    if (lM > mM * 1.03 && lM > eM) return this.stepB;
+    if (lM < mM * 0.95) return -this.stepS;
+    if (lM > mM * 0.985) return this.stepS;
+    return 0;
+  }
+  process() {
+    for (;;) {
+      if (this.state === 'SEARCH') {
+        if (this.wAbs - this.rPos < this.N) return;
+        const r = this.corrBlock(this.rPos);
+        if (r.rho >= CH_TH) { this.cand = this.rPos + r.lag; this.state = 'REFINE'; continue; }
+        this.rPos += this.N - this.Lc + 1;
+        continue;
+      }
+      if (this.state === 'REFINE') {
+        const start = Math.max(0, this.cand - 512);
+        if (this.wAbs < start + this.N) return;
+        const r = this.corrBlock(start), up = start + r.lag;
+        if (r.rho < CH_TH) { this.rPos = this.cand + 1; this.state = 'SEARCH'; continue; }
+        if (this.wAbs < up + 2 * this.Lc + this.Lg + DN_RNG + 8) { this.cand = up; return; }
+        const exp = up + this.Lc + this.Lg;
+        let bd = 0, bl = 0;
+        for (let l = -DN_RNG; l <= DN_RNG; l += 2) { const v = this.dnRho(exp + l); if (v > bd) { bd = v; bl = l; } }
+        if (bd < Math.max(CH_DN_TH, DN_REL * r.rho)) { this.rPos = up + this.Lc; this.state = 'SEARCH'; continue; }
+        const dnStart = exp + bl / 2, tA = dnStart + this.Lc + this.Lg;
+        this.hyp = [tA, tA + this.P];
+        this.upPos = up; this.rhoU = r.rho; this.rhoD = bd;
+        this.state = 'GATE';
+        continue;
+      }
+      if (this.state === 'GATE') {
+        if (this.wAbs < this.hyp[1] + this.gs * 0.75 + TRAIN_SYMS * this.sym + this.sps + 8) return;
+        let bc = -1, bi = 0;
+        for (let i = 0; i < 2; i++) { const c = this.trainContrast(this.hyp[i] + this.gs * 0.75); if (c > bc) { bc = c; bi = i; } }
+        if (bc < TRAIN_MIN) {
+          if (this.rhoU >= 0.4) this.log(`학습 불일치 ${bc.toFixed(2)} (다른 속도/대역 또는 오검출)`);
+          this.rPos = this.upPos + this.Lc; this.state = 'SEARCH'; continue;
+        }
+        this.t0 = this.hyp[bi];
+        this.pos = this.t0 + this.gs * 0.75;
+        this.state = 'TRAIN';
+        this.log(`CHIRP✓ ρ↑=${this.rhoU.toFixed(2)} ρ↓=${this.rhoD.toFixed(2)} 쌍${bi ? 1 : 2}/2 학습대비=${bc.toFixed(2)}`);
+        if (this.cb.status) this.cb.status('학습...');
+        continue;
+      }
+      if (this.state === 'TRAIN') {
+        if (this.wAbs < this.pos + (TRAIN_SYMS + PROBE_SYMS) * this.sym + this.sps + 8) return;
+        const p0 = this.pos, G = this.G, Gm = this.groups;
+        const tb = []; for (let k = 0; k < TRAIN_SYMS; k++) tb.push(this.window(p0 + k * this.sym).slice());
+        const meas = ppm => { const r = 1 + ppm / 1e6; let s = 0; for (let k = 0; k < TRAIN_SYMS; k++) for (let g = 0; g < G; g++) for (let t = 0; t < NT; t++) { const v = this.gzF(tb[k], Gm[g].tones[t] * r); s += ((t & 1) === (k & 1)) ? v : -v; } return s; };
+        const m0 = meas(0); let bp = 0, bm = m0;
+        for (let ppm = -1000; ppm <= 1000; ppm += 100) { if (!ppm) continue; const s = meas(ppm); if (s > bm) { bm = s; bp = ppm; } }
+        if (bp) { for (const ppm of [bp - 50, bp + 50]) { const s = meas(ppm); if (s > bm) { bm = s; bp = ppm; } } if (bm < m0 + 0.08 * Math.abs(m0)) bp = 0; }
+        this.setCoeffs(1 + bp / 1e6);
+        this.symStep = this.sym / this.ratio;
+        const trm = [];
+        for (let g = 0; g < G; g++) { const m = new Float32Array(NT); for (let k = 0; k < TRAIN_SYMS; k++) for (let t = k & 1; t < NT; t += 2) m[t] = this.gz(tb[k], g, t); trm.push(m); }
+        this.trm = trm;
+        this.gain = trm.map(m => { let mean = 0; for (const v of m) mean += v / NT; return Float32Array.from(m, v => v / (mean || 1)); });
+        this.eqZ = this.gain.map(a => a.map(v => 1 / Math.max(0.12, v)));
+        const pr = [0, 1].map(k => this.rawMags(p0 + (TRAIN_SYMS + k) * this.symStep));
+        this.ec = []; this.echo = []; this.nf = []; let apm = 0;
+        for (let g = 0; g < G; g++) {
+          let aa = 0, na = 0; for (let t = 0; t < NT; t += 2) { aa += this.gz(tb[1], g, t) / (trm[g][t] || 1e-9); na++; }
+          const rat = k => { let a = 0, n = 0; for (let t = 1; t < NT; t += 2) { a += pr[k][g][t] / (trm[g][t] || 1e-9); n++; } return a / n; };
+          const a1 = Math.min(0.8, aa / na), p1 = rat(0), p2 = rat(1);
+          apm += p1 / G;
+          /* 톤별 a1: 짝수톤 = 학습B 창의 학습A 잔류, 홀수톤 = 무음 프로브1 의 학습B 잔류 */
+          const a1t = new Float32Array(NT);
+          for (let t = 0; t < NT; t++) { const per = (t & 1 ? pr[0][g][t] : this.gz(tb[1], g, t)) / (trm[g][t] || 1e-9); a1t[t] = Math.min(0.9, A1_MIX * per + (1 - A1_MIX) * a1); }
+          this.ec.push({ a1, a1t, rho: p1 > 0.02 ? Math.min(0.9, p2 / p1) : 0 });
+          this.echo.push(new Float32Array(NT));
+          const fl = Array.from({ length: NT }, (_, t) => Math.min(pr[0][g][t], pr[1][g][t])).sort((a, b) => a - b);
+          this.nf.push(fl[NT >> 1] + 1e-7);
+        }
+        const gf = this.gain.flatMap(a => Array.from(a)), gmin = Math.max(1e-4, Math.min(...gf)), gmax = Math.max(...gf);
+        const am = this.ec.reduce((s2, e) => s2 + e.a1, 0) / G, rm = this.ec.reduce((s2, e) => s2 + e.rho, 0) / G;
+        const gdb = trm.map(m => { let s2 = 0; for (const v of m) s2 += v; return s2 / NT; });
+        const gref = Math.max(...gdb);
+        let snr = 0; for (let g = 0; g < G; g++) snr += gdb[g] / this.nf[g] / G;
+        this.log(`TRAIN ppm=${bp} 이득 ${(20 * Math.log10(gmin)).toFixed(1)}~${(20 * Math.log10(gmax)).toFixed(1)}dB 잔향 a1=${am.toFixed(2)}(무음 ${apm.toFixed(2)}) ρ=${rm.toFixed(2)} SNR≈${(20 * Math.log10(snr)).toFixed(0)}dB 그룹=${gdb.map(v => (20 * Math.log10(v / gref)).toFixed(0)).join('/')}dB`);
+        this.pos = p0 + (TRAIN_SYMS + PROBE_SYMS) * this.symStep;
+        this.hist = []; this.clh = []; this.hdrN = 0;
+        this.lvlSum = 0; this.lvlN = 0; this.lvlRef = 0; this.quiet = 0;
+        this.state = 'HDR';
+        continue;
+      }
+      if (this.wAbs < this.pos + this.sps + this.dT + 8) return;
+      if (this.state === 'HDR') {
+        const raw = this.rawMags(this.pos), m = this.clean(raw);
+        const dets = this.eqL(m).map(x => this.detS(x));
+        for (let g = 0; g < this.G; g++) { this.lvlSum += raw[g][dets[g].nib]; this.lvlN++; }
+        this.hdrN += this.G;
+        this.pos += this.symStep + this.track(this.pos, dets.map(d => d.tones), raw);
+        if (this.hdrN >= HDR_SLOTS) {
+          const ls = this.hist.length;
+          let h = null;
+          for (const K of DFE_KS) { h = this.decodeHdr(this.replay(K).slice(0, ls)); if (h) { if (K !== DFE_KS[0]) this.log(`HDR K=${K}✓`); break; } }
+          if (!h) { this.reset('HDR invalid'); this.rPos = Math.floor(this.t0); continue; }
+          this.hdr = h; this.mode = h.mode; this.rsT = h.rsT;
+          this.payloadLen = h.L; this.lay = frameLayout(h.L, this.G, h.mode);
+          const ap = ampPlan(this.G, h.mode);
+          this.lvlRef = this.lvlSum / Math.max(1, this.lvlN) * (ap.aD / ap.aL);
+          this.det = this.makeDet(this.clh.slice(0, ls), h.nibs, 'llr');
+          this.dataVals = []; this.dataScore = []; this.errCnt = 0; this.quiet = 0;
+          this.state = 'DATA';
+          this.log(`HDR L=${h.L}B ${TONE_MODES[h.mode].name} RS t=${h.rsT} (${this.lay.dataSyms}sym)`);
+          if (this.cb.status) this.cb.status(`수신 0/${h.L}B`);
+        }
+        continue;
+      }
+      if (this.state === 'DATA') {
+        const raw = this.rawMags(this.pos), m = this.clean(raw);
+        const r = this.det.step(m);
+        let lvl = 0;
+        for (let g = 0; g < this.G; g++) {
+          this.dataVals.push(r.vals[g]); this.dataScore.push(r.conf[g]); if (r.conf[g] < CONF_LOW) this.errCnt++;
+          let a = 0; for (const t of r.tones[g]) a += raw[g][t];
+          lvl += a / r.tones[g].length;
+        }
+        lvl /= this.G;
+        this.quiet = lvl < QUIET_FRAC * this.lvlRef ? this.quiet + 1 : 0;
+        if (this.quiet >= this.quietMax) {
+          const p = Math.floor(this.pos);
+          this.reset('신호 끊김(송신 취소)'); this.rPos = p;
+          if (this.cb.status) this.cb.status('송신 중단됨 → 대기');
+          if (this.cb.prog) this.cb.prog(0);
+          continue;
+        }
+        this.pos += this.symStep + this.track(this.pos, r.tones, raw);
+        const nSym = this.dataVals.length / this.G;
+        if ((nSym & 3) === 0 || nSym >= this.lay.dataSyms) {
+          const br = Math.min((this.dataVals.length * TONE_MODES[this.mode].W) >> 3, this.payloadLen);
+          if (this.cb.bytes) this.cb.bytes(br);
+          if (this.cb.errors) this.cb.errors(this.errCnt);
+          const pct = Math.min(nSym / this.lay.dataSyms, 1);
+          if (this.cb.prog) this.cb.prog(pct);
+          if (this.cb.status) this.cb.status(`수신${(pct * 100) | 0}% ${br}/${this.payloadLen}B`);
+        }
+        if (nSym >= this.lay.dataSyms) this.finish();
+        continue;
+      }
+      return;
+    }
+  }
+  /* HDR: 3사본 연판정 합산 → 실패 시 사본별 경판정 → 사본 다수결. CRC-8 + 길이 타당성 검사 */
+  decodeHdr(cl) {
+    const G = this.G, lm = hdrMap(G), acc = Array.from({ length: HDR_NIB }, () => new Float32Array(NT)), cp = [[], [], []], cnt = new Int8Array(HDR_NIB);
+    for (let k = 0; k < HDR_SLOTS; k++) {
+      const g = k % G, m0 = cl[(k / G) | 0][g], m = m0.map((v, t) => v * this.eqZ[g][t]);
+      let s = 0; for (const v of m) s += v;
+      const i = lm[k]; let b = 0;
+      for (let t = 0; t < NT; t++) { acc[i][t] += m[t] / (s || 1); if (m[t] > m[b]) b = t; }
+      cp[cnt[i]++][i] = b;
+    }
+    const tryN = arr => { const h = hdrParse(nibblesToBytes(arr)); if (h) h.nibs = arr.slice(); return h; };
+    let h = tryN(acc.map(a => { let b = 0; for (let t = 1; t < NT; t++) if (a[t] > a[b]) b = t; return b; }));
+    if (h) return h;
+    for (let r = 0; r < 3; r++) { h = tryN(cp[r]); if (h) { this.log(`HDR copy${r + 1}✓`); return h; } }
+    const mj = []; for (let i = 0; i < HDR_NIB; i++) { const a = cp[0][i], b = cp[1][i], c = cp[2][i]; mj.push(a === b || a === c ? a : b === c ? b : a); }
+    return tryN(mj);
+  }
+  /* 데이터 판정 결과로 톤별 잔향(심볼 간 간섭) 계수를 다시 추정 — 학습 2심볼보다 훨씬 많은 표본 */
+  estEcho(vals, conf) {
+    const G = this.G, S = TONE_MODES[this.mode].S, M = NT / S, bb = Math.log2(M), ls = this.lay.hdrSyms, nd = this.lay.dataSyms;
+    const on = [];
+    for (let s = 0; s < nd; s++) { const row = []; for (let g = 0; g < G; g++) { const k = s * G + g, v = vals[k], set = new Set(); if (conf[k] > 2) for (let q = 0; q < S; q++) set.add(q * M + ((v >> (bb * (S - 1 - q))) & (M - 1))); row.push(conf[k] > 2 ? set : null); } on.push(row); }
+    const ec = [];
+    for (let g = 0; g < G; g++) {
+      const a1t = Float32Array.from(this.ec[g].a1t); let s1 = 0, s2 = 0;
+      for (let t = 0; t < NT; t++) {
+        let A = 0, R1 = 0, c1 = 0, B = 0, c0 = 0, R2 = 0, A2 = 0, c2 = 0;
+        for (let s = 2; s < nd; s++) {
+          const p2 = on[s - 2][g], p1 = on[s - 1][g], c = on[s][g];
+          if (!p1 || !c) continue;
+          const r = this.hist[ls + s][g][t];
+          if (c.has(t)) continue;
+          if (p1.has(t)) { A += this.hist[ls + s - 1][g][t]; R1 += r; c1++; }
+          else if (p2 && p2.has(t)) { A2 += this.hist[ls + s - 2][g][t]; R2 += r; c2++; }
+          else if (p2) { B += r; c0++; }
+        }
+        if (c0 < 3) continue;
+        const base = B / c0;
+        if (c1 >= 3 && A > 0) { const a = Math.max(0, Math.min(0.9, (R1 / c1 - base) / (A / c1))); a1t[t] = c1 >= 8 ? a : 0.5 * (a + a1t[t]); s1 += a; }
+        if (c2 >= 3 && A2 > 0) s2 += Math.max(0, (R2 / c2 - base) / (A2 / c2));
+      }
+      const rho = s1 > 0.05 ? Math.min(0.9, s2 / s1) : this.ec[g].rho;
+      ec.push({ a1: this.ec[g].a1, a1t, rho });
+    }
+    return ec;
+  }
+  candsFor(K, ec, kinds, tag) {
+    const ls = this.lay.hdrSyms, nd = this.lay.dataSyms, W = TONE_MODES[this.mode].W, L = this.payloadLen, nU = this.lay.dataUnits;
+    const cl = this.replay(K, ec), hl = cl.slice(0, ls), dl = cl.slice(ls, ls + nd), out = [];
+    for (const kind of kinds) {
+      const det = this.makeDet(hl, this.hdr.nibs, kind), vals = [], sc = [];
+      for (const m of dl) { const r = det.step(m); for (let g = 0; g < this.G; g++) { vals.push(r.vals[g]); sc.push(r.conf[g]); } }
+      out.push({ name: `${kind}·K${K}${tag}`, vals, conf: sc, bytes: scramble(unpackBits(vals.slice(0, nU), W, L)), scores: unitScoresToBytes(sc, W, L) });
+    }
+    return out;
+  }
+  finish() {
+    const L = this.payloadLen, W = TONE_MODES[this.mode].W, nU = this.lay.dataUnits;
+    const check = d => { const p = parsePkt(Array.from(d)); return !!(p && p.crcOk); };
+    const first = { name: 'llr·K1', vals: this.dataVals, conf: this.dataScore, bytes: scramble(unpackBits(this.dataVals.slice(0, nU), W, L)), scores: unitScoresToBytes(this.dataScore, W, L) };
+    let res = null, cands = [first], pass = 1;
+    const tryDec = list => { try { return rsDecodeMulti(list, this.rsT, check); } catch (e) { this.log('RS 예외 ' + e); return null; } };
+    res = tryDec(cands);
+    if (!(res && res.crcOk)) {
+      /* 1차: 잔향소거 강도·검출 방식이 다른 가설 + 다수결 */
+      const extra = [...this.candsFor(1, null, ['llrNA', 'zf'], ''), ...this.candsFor(0.5, null, ['llr', 'llrNA', 'zf'], ''), ...this.candsFor(0, null, ['llr', 'zf'], '')];
+      cands = [first, this.voteCand([first, ...extra]), ...extra];
+      res = tryDec(cands); pass = 2;
+      /* 2차: 판정 결과로 톤별 잔향 계수를 재추정해 다시 검출 (최대 2회 반복) */
+      let base = first;
+      for (let it = 0; it < 2 && !(res && res.crcOk); it++) {
+        const ec2 = this.estEcho(base.vals, base.conf);
+        const re = [...this.candsFor(1, ec2, ['llr', 'llrNA'], '·R' + (it + 1)), ...this.candsFor(0.5, ec2, ['llr'], '·R' + (it + 1))];
+        cands = [...re, this.voteCand([...re, first]), ...cands];
+        res = tryDec(cands); pass = 3 + it; base = re[0];
+      }
+    }
+    const errs = this.errCnt, end = Math.floor(this.pos);
+    const info = { lowConf: errs, mode: this.mode, rsT: this.rsT, L, corrected: res ? res.corrected : -1, pass };
+    if (res) this.log(`RX ${L}B ${TONE_MODES[this.mode].name} 불확실=${errs} → RS ${res.failedBlocks ? `실패 ${res.failedBlocks}/${res.nBlocks}블록` : `복구 ${res.corrected}`} CRC${res.crcOk ? '✓' : '✗'} 단계${pass} [${res.used.map(v => v < 0 ? '-' : cands[v].name).join(',')}]${res.swaps ? ' 대안' + res.swaps : ''}`);
+    this.reset(); this.rPos = end;
+    const pkt = res ? parsePkt(Array.from(res.data)) : null;
+    if (this.cb.complete) this.cb.complete(pkt, info);
+    const self = this, seq = ++this.finSeq;
+    setTimeout(() => { if (self.finSeq === seq && self.state === 'SEARCH') { if (self.cb.status) self.cb.status('다음 대기...'); if (self.cb.prog) self.cb.prog(0); } }, 1500);
+  }
+  voteCand(all) {
+    const L = all[0].bytes.length, vote = new Uint8Array(L), vs = new Float32Array(L);
+    for (let i = 0; i < L; i++) {
+      const cnt = new Map(); let bv = 0, bc = 0;
+      for (const c of all) { const v = c.bytes[i], n = (cnt.get(v) || 0) + 1; cnt.set(v, n); if (n > bc) { bc = n; bv = v; } }
+      vote[i] = bv; vs[i] = bc + 0.01 * all[0].scores[i];
+    }
+    return { name: 'vote', bytes: vote, scores: vs };
+  }
+  reset(why) {
+    this.setCoeffs(1); this.symStep = this.sym;
+    this.state = 'SEARCH'; this.gain = null; this.eqZ = null; this.ec = null; this.echo = null; this.hist = []; this.clh = []; this.hyp = null; this.det = null;
+    this.hdrN = 0; this.payloadLen = -1; this.errCnt = 0; this.quiet = 0;
+    if (why) this.log('reset: ' + why);
+  }
+}
+
+/*═══ 송신 전 환경 측정 ═══
+  녹음 = [조용히 듣기 NOISE_SEC] + [대역별 DOWN 처프 1개씩]  (DOWN 처프는 수신기의 UP 처프 탐색에 걸리지 않는다)
+  · 대역별 소음(dBFS), 협대역 간섭(톤 위치에 솟은 피크) 개수
+  · 처프 정합필터 출력 = 대역 제한된 방 임펄스응답 → 5ms·11ms 이후 늦은 잔향 비율, RT60
+  · 스피커→마이크 처프 수준 대 소음 = 그 대역을 이 기기 스피커가 낼 수 있는지 */
+const ENV = { NOISE_SEC: 0.7, PROBE_GAP: 0.35, PROBE_VOL: 0.5, SKIP_SEC: 0.08 };
+function envProbeSignal(sr, vol) {
+  const parts = [], meta = [];
+  let n = Math.round(sr * (ENV.NOISE_SEC + 0.05));
+  for (const bk of Object.keys(BANDS)) {
+    const gr = allocGroups(BANDS[bk].lo, BANDS[bk].hi, 46.875), [f0, f1] = chirpBand(gr), L = Math.round(sr * CHIRP_SEC);
+    meta.push({ band: bk, at: n, f0, f1, L });
+    parts.push({ at: n, w: chirpWave(sr, f0, f1, L, false) });
+    n += L + Math.round(sr * ENV.PROBE_GAP);
+  }
+  const out = new Float32Array(n + Math.round(sr * 0.1)), a = Math.min(0.9, vol * ENV.PROBE_VOL);
+  for (const p of parts) for (let i = 0; i < p.w.length; i++) out[p.at + i] = a * p.w[i];
+  return { samples: out, meta, noiseEnd: Math.round(sr * ENV.NOISE_SEC) };
+}
+function _bp(x, f0, f1, sr) {
+  const qs = [biquad('hp', f0, sr), biquad('hp', f0, sr), biquad('lp', f1, sr), biquad('lp', f1, sr)], y = new Float32Array(x.length);
+  for (let i = 0; i < x.length; i++) { let v = x[i]; for (const q of qs) v = bqRun(q, v); y[i] = v; }
+  return y;
+}
+/* rec: 녹음(송신 시작과 대략 맞춘 것, 앞뒤 여유 있음) */
+function envAnalyze(rec, sr) {
+  const res = {}, nE = Math.round(sr * ENV.NOISE_SEC), sk = Math.round(sr * ENV.SKIP_SEC);
+  /* 소음 스펙트럼 (Hann 4096 평균) */
+  const NF = 4096, re = new Float64Array(NF), im = new Float64Array(NF), psd = new Float64Array(NF / 2); let nf = 0;
+  for (let o = sk; o + NF <= nE; o += NF >> 1) {
+    for (let i = 0; i < NF; i++) { re[i] = rec[o + i] * (0.5 - 0.5 * Math.cos(2 * Math.PI * i / NF)); im[i] = 0; }
+    fftIP(re, im, false); for (let k = 0; k < NF / 2; k++) psd[k] += re[k] * re[k] + im[k] * im[k]; nf++;
+  }
+  for (const bk of Object.keys(BANDS)) {
+    const gr = allocGroups(BANDS[bk].lo, BANDS[bk].hi, 46.875), [f0, f1] = chirpBand(gr), L = Math.round(sr * CHIRP_SEC);
+    const y = _bp(rec, f0, f1, sr);
+    let pn = 0, c = 0; for (let i = sk; i < nE; i++) { pn += y[i] * y[i]; c++; }
+    const nRms = Math.sqrt(pn / Math.max(1, c)) + 1e-9;
+    /* 협대역 간섭: 톤 범위 안에서 중앙값보다 15dB 이상 솟은 빈 */
+    const peaks = [];
+    if (nf) {
+      const k0 = Math.ceil(gr[0].tones[0] * NF / sr), k1 = Math.floor(gr[gr.length - 1].tones[NT - 1] * NF / sr);
+      const v = []; for (let k = k0; k <= k1; k++) v.push(psd[k]);
+      const med = v.slice().sort((a, b) => a - b)[v.length >> 1] || 1e-30;
+      for (let k = k0 + 1; k < k1; k++) if (psd[k] > med * 31.6 && psd[k] >= psd[k - 1] && psd[k] >= psd[k + 1]) peaks.push(Math.round(k * sr / NF));
+    }
+    /* 처프 정합필터 (실수·직교 템플릿) — 녹음 중 처프 구간만 */
+    const tS = chirpWave(sr, f0, f1, L, false), tC = chirpWave(sr, f0, f1, L, false, true);
+    let Et = 0; for (const v of tS) Et += v * v;
+    let N = 1; while (N < rec.length - nE + L) N <<= 1;
+    const xr = new Float64Array(N), xi = new Float64Array(N); for (let i = nE; i < rec.length; i++) xr[i - nE] = y[i];
+    fftIP(xr, xi, false);
+    const corr = tpl => { const ar = new Float64Array(N), ai = new Float64Array(N); ar.set(tpl); fftIP(ar, ai, false); for (let k = 0; k < N; k++) { const a = xr[k], b = xi[k], c2 = ar[k], d = ai[k]; ar[k] = a * c2 + b * d; ai[k] = b * c2 - a * d; } fftIP(ar, ai, true); return ar; };
+    const cS = corr(tS), cC = corr(tC), M = rec.length - nE - L, env = new Float64Array(Math.max(0, M));
+    let pk = 0, pi = 0; for (let i = 0; i < M; i++) { const e = Math.sqrt(cS[i] * cS[i] + cC[i] * cC[i]) / Et; env[i] = e; if (e > pk) { pk = e; pi = i; } }
+    /* 정합필터 출력의 바닥(소음) = 피크에서 먼 구간의 중앙값 */
+    const far = []; for (let i = 0; i < M; i++) if (Math.abs(i - pi) > sr * 0.2) far.push(env[i] * env[i]);
+    far.sort((a, b) => a - b); const fl = far.length ? far[far.length >> 1] : 0;
+    const i0 = Math.max(0, pi - Math.round(sr * 0.0005)), iE = Math.min(M, pi + Math.round(sr * 0.25));
+    let tot = 0, l5 = 0, l11 = 0; const edc = [];
+    for (let i = i0; i < iE; i++) { const h = Math.max(0, env[i] * env[i] - fl); tot += h; if (i > pi + sr * 0.005) l5 += h; if (i > pi + sr * 0.011) l11 += h; edc.push(h); }
+    for (let i = edc.length - 2; i >= 0; i--) edc[i] += edc[i + 1];
+    let t5 = -1, t25 = -1; for (let i = 0; i < edc.length; i++) { const db = 10 * Math.log10(edc[i] / (edc[0] || 1) + 1e-12); if (t5 < 0 && db < -5) t5 = i; if (t25 < 0 && db < -25) { t25 = i; break; } }
+    const db = v => 10 * Math.log10(v + 1e-12);
+    res[bk] = {
+      noiseDb: 20 * Math.log10(nRms), peaks,
+      marginDb: 20 * Math.log10((pk / Math.SQRT2) / nRms),          /* 스피커→마이크 처프 RMS 대 소음 */
+      late5Db: tot > 0 ? db(l5 / tot) : 0, late11Db: tot > 0 ? db(l11 / tot) : 0,
+      rt60: t5 > 0 && t25 > t5 ? 3 * (t25 - t5) / sr : -1, found: pk > 4 * Math.sqrt(fl + 1e-30)
+    };
+  }
+  return res;
+}
+/* 측정 결과 → 권장 설정 (scope: 'mode' = 속도·톤·RS·볼륨, 'all' = 대역 포함) */
+function envDecide(r, cur, scope) {
+  const why = [], out = { ...cur };
+  const ok = b => r[b] && r[b].found && r[b].marginDb > 20;
+  const score = b => !ok(b) ? -1e9 : Math.min(r[b].marginDb, 50) - Math.max(0, r[b].noiseDb + 70) - 4 * r[b].peaks.length;
+  if (scope === 'all') {
+    const best = score('mid') >= score('ultra') ? 'mid' : 'ultra';
+    if (score(best) > -1e8 && best !== cur.band) { out.band = best; why.push(`${BANDS[best].label} 대역이 더 유리`); }
+  } else if (!ok(cur.band)) why.push(`⚠ ${BANDS[cur.band].label} 대역 신호가 약함(스피커 재생 한계?) — 대역 '전체 자동' 권장`);
+  const e = r[out.band] || { noiseDb: -90, peaks: [], late5Db: -30, late11Db: -30, marginDb: 40 };
+  /* 속도: 잔향 시간(RT60)과 늦은 반사 에너지 비율 — 마진이 작으면 RT60 은 믿지 않는다 */
+  const relRT = e.marginDb >= 25, rtTxt = e.rt60 > 0 && relRT ? ` RT≈${(e.rt60 * 1000).toFixed(0)}ms` : '';
+  if ((relRT && e.rt60 > 0.3) || e.late11Db > -6 || e.noiseDb > -52) { out.spd = 'stable'; why.push(`${e.noiseDb > -52 ? '소음 큼' : '잔향 강함'}${rtTxt} → 안정`); }
+  else if ((relRT && e.rt60 > 0.1) || e.late5Db > -10) { out.spd = 'std'; why.push(`반사음 보통${rtTxt} → 표준`); }
+  else { out.spd = cur.spd === 'stable' ? 'std' : cur.spd; why.push(`반사 적음${rtTxt} → ${SPD[out.spd].label}`); }
+  /* 톤방식·RS·볼륨: 소음 크기와 간섭 */
+  const nz = e.noiseDb, pk = e.peaks.length;
+  let mode = nz < -70 && e.marginDb >= 35 && !(relRT && e.rt60 > 0.15) ? 2 : nz < -56 ? 1 : 0;
+  if (pk >= 3) mode = Math.max(0, mode - 1);
+  if (e.marginDb < 30) mode = 0;
+  if (out.spd === 'stable' && mode === 2) mode = 1;
+  if (relRT && e.rt60 > 0.45) mode = Math.min(mode, 1);
+  out.mode = Math.min(mode, cur.maxMode ?? 2);
+  out.rsT = nz > -50 || pk >= 4 ? 16 : Math.max(8, cur.rsT >= 8 ? cur.rsT : 8);
+  out.vol = nz > -60 ? 1 : cur.vol;
+  why.push(`소음 ${nz.toFixed(0)}dBFS${pk ? ` · 간섭 ${pk}곳(${e.peaks.slice(0, 3).map(f => (f / 1e3).toFixed(2) + 'k').join(',')})` : ''} → ${TONE_MODES[out.mode].name}·RS t=${out.rsT}${out.vol !== cur.vol ? '·볼륨↑' : ''}`);
+  return { cfg: out, why };
+}
+
+/*═════════ UI / WEBAUDIO GLUE ═════════*/
+const $ = id => document.getElementById(id);
+const MAX_FILE = 1024 * 1024, SEG_GAP = 0.3, PKT_TEXT = 1, PKT_FILE1 = 2, PKT_KO = 3, PKT_SEG = 4, SEG_HDR = 19;
+let C = { band: 'mid', spd: 'std', mode: 0, vol: 0.95, rsT: 8 };
+let actx = null, txBusy = false, txCur = null, workletReady = false;
+const cnt = { ok: 0, fail: 0, segFail: 0 };
+function log(m) { const e = $('dbg'), t = new Date().toLocaleTimeString('ko', { hour12: false }); e.textContent += `[${t}] ${m}\n`; if (e.textContent.length > 60000) e.textContent = e.textContent.slice(-40000); e.scrollTop = e.scrollHeight; }
+function txGroups() { const b = BANDS[C.band], s = SPD[C.spd]; return allocGroups(b.lo, b.hi, s.spacing); }
+function frameSecs(rsBytes) { const s = SPD[C.spd]; return frameDurSec(rsBytes, txGroups().length, C.mode, 48000, s.baud, s.guard); }
+function fmtT(s) { return s < 60 ? s.toFixed(1) + 's' : s < 3600 ? `${Math.floor(s / 60)}분 ${Math.round(s % 60)}초` : `${Math.floor(s / 3600)}시간 ${Math.round(s % 3600 / 60)}분`; }
+function fmtSz(b) { return b < 1024 ? b + 'B' : b < 1048576 ? (b / 1024).toFixed(1) + 'KB' : (b / 1048576).toFixed(2) + 'MB'; }
+function cfgChg() {
+  C.band = $('selMode').value; C.spd = $('selSpd').value; C.vol = +$('selVol').value; C.rsT = +$('selRS').value; C.mode = +$('selDT').value;
+  const groups = txGroups(), G = groups.length, s = SPD[C.spd], TM = TONE_MODES[C.mode];
+  const cls = ['#00ffa8', '#00d4ff', '#b490ff', '#ffb020', '#ff4d6a']; const r = $('bmRow'); r.innerHTML = '';
+  groups.forEach((gr, i) => { const d = document.createElement('div'); d.className = 'bm-b'; d.style.background = cls[i % 5] + '30'; d.style.border = '1px solid ' + cls[i % 5] + '55'; d.textContent = `G${i + 1}: ${(gr.tones[0] / 1e3).toFixed(2)}-${(gr.tones[15] / 1e3).toFixed(2)}k`; r.appendChild(d); });
+  const bps = G * TM.W * s.baud / (1 + s.guard);
+  $('cfgId').textContent = `${C.band.toUpperCase()}-${s.label}-${TM.name}-G${G}-RS${C.rsT}`;
+  $('cfgInfo').textContent = `그룹${G}개 × 16톤 ${TM.name}(${TM.S}톤/그룹) | ${bps.toFixed(0)}bps (${(bps / 8).toFixed(0)}B/s 원시) | 한글 13자 ≈ ${frameSecs(rsEncodedLen(32, C.rsT)).toFixed(1)}s`;
+  schedStats(); updFileStats();
+}
+function swTab(t) {
+  const o = t === 'text' ? 'file' : 'text', p = t === 'text' ? '' : 'f';
+  if (rxI[o] && !rxI[t]) $(p + 'rxS').textContent = `📻 ${o === 'text' ? '텍스트' : '파일'} 탭에서 수신 중 — 여기서 ● 수신을 누르면 이쪽으로 전환`; document.querySelectorAll('.tab').forEach((e, i) => e.classList.toggle('on', (i === 0 && t === 'text') || (i === 1 && t === 'file'))); $('tc-text').classList.toggle('on', t === 'text'); $('tc-file').classList.toggle('on', t === 'file'); }
+function getCtx() { if (!actx) { try { actx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 48000 }); } catch (e) { actx = new (window.AudioContext || window.webkitAudioContext)(); } log(`AudioCtx SR=${actx.sampleRate}`); } if (actx.state === 'suspended') actx.resume(); return actx; }
+function testTone() { const ctx = getCtx(), groups = txGroups(); for (const gr of groups) for (const f of [gr.tones[0], gr.tones[15]]) { const o = ctx.createOscillator(), g = ctx.createGain(); o.frequency.value = f; g.gain.value = C.vol * 0.05 / (groups.length * 2); o.connect(g); g.connect(ctx.destination); o.start(); o.stop(ctx.currentTime + 0.3); } log(`TEST: ${groups.map(g => g.tones[0] + '-' + g.tones[15]).join(' | ')}`); }
+
+/*── 통계 (250ms 디바운스) ──*/
+let statT = null;
+function schedStats() { clearTimeout(statT); statT = setTimeout(updStats, 250); }
+function updStats() {
+  const text = $('txIn').value, orig = new TextEncoder().encode(text).length;
+  if (!orig) { $('s_to').textContent = 0; $('s_tc').textContent = 0; $('s_tr').textContent = 0; $('s_tt').textContent = '-'; return; }
+  const enc = encodeTextBest(text), pkt = buildPkt(enc.type, enc.data, ''), L = rsEncodedLen(pkt.length, C.rsT);
+  $('s_to').textContent = orig; $('s_tc').textContent = enc.data.length + (enc.type === 3 ? '한' : ''); $('s_tr').textContent = L;
+  $('s_tt').textContent = L > MAX_FRAME_BYTES ? '너무 김 → 파일 탭' : fmtT(frameSecs(L));
+}
+$('txIn').addEventListener('input', schedStats);
+
+/*── TX: 여러 프레임을 이어서 예약 재생 (다음 프레임은 재생 중에 미리 합성) · 전송 중 버튼 = 취소 ──*/
+function pauseAllRx() { for (const k in rxI) if (rxI[k]) rxI[k].pause(); }
+function resumeAllRx() { for (const k in rxI) if (rxI[k]) rxI[k].resume(); }
+function cancelTx() {
+  const job = txCur; if (!job || job.cancelled) return;
+  job.cancelled = true; job.cancelAt = actx.currentTime;
+  const t = actx.currentTime, g = job.gain.gain;
+  try { g.cancelScheduledValues(t); g.setValueAtTime(g.value, t); g.linearRampToValueAtTime(0, t + 0.03); } catch (e) { }
+  for (const e of job.srcs) { try { e.src.stop(t + 0.04); } catch (e2) { } }
+}
+function transmitFrames(pkts, ui, segLabel) {
+  txBusy = true;
+  const ctx = getCtx(), sr = ctx.sampleRate, sp = SPD[C.spd];
+  const cfg = { sr, baud: sp.baud, guard: sp.guard, vol: C.vol, groups: txGroups(), mode: C.mode, rsT: C.rsT };
+  const G = cfg.groups.length, n = pkts.length;
+  const enc = pkts.map(p => rsEncodeAll(p, cfg.rsT).encoded);
+  const durs = enc.map(e => frameDurSec(e.length, G, cfg.mode, sr, cfg.baud, cfg.guard));
+  const totalDur = durs.reduce((a, b) => a + b, 0) + SEG_GAP * (n - 1);
+  log(`TX: ${n}프레임 ${enc.reduce((a, e) => a + e.length, 0)}B ${TONE_MODES[cfg.mode].name}·${sp.label}·RS${cfg.rsT} 예상 ${fmtT(totalDur)}`);
+  pauseAllRx();
+  const gn = ctx.createGain(); gn.connect(ctx.destination);
+  const job = { cancelled: false, gain: gn, srcs: [] }; txCur = job;
+  let next = 0, tNext = ctx.currentTime + 0.08, finished = false;
+  const tBegin = tNext;
+  const cv = $(ui.cid), cx = cv.getContext('2d');
+  return new Promise(res => {
+    let wd = null;
+    const fin = () => {
+      if (finished) return; finished = true; clearInterval(wd);
+      try { gn.disconnect(); } catch (e) { }
+      if (txCur === job) txCur = null;
+      txBusy = false;
+      ui.prog(job.cancelled ? 0 : 1); ui.status(job.cancelled ? '취소됨' : '완료✓');
+      log(job.cancelled ? 'TX 취소' : 'TX 완료');
+      setTimeout(() => { if (!txBusy) resumeAllRx(); }, 200);
+      res(!job.cancelled);
+    };
+    const sched = () => {
+      const k = next++, { samples, durSec, viz } = synthesize(enc[k], cfg);
+      const buf = ctx.createBuffer(1, samples.length, sr); buf.getChannelData(0).set(samples);
+      const src = ctx.createBufferSource(); src.buffer = buf; src.connect(gn);
+      if (tNext < ctx.currentTime + 0.02) tNext = ctx.currentTime + 0.05;
+      const ent = { src, samples, viz, t0: tNext, t1: tNext + durSec, k, ended: false };
+      src.onended = () => onEnd(ent);
+      src.start(ent.t0); tNext = ent.t1 + SEG_GAP;
+      job.srcs.push(ent);
+      if (job.srcs.length > 4) job.srcs.splice(0, job.srcs.length - 4).forEach(e => { e.samples = null; e.viz = null; });
+    };
+    const onEnd = ent => {
+      ent.ended = true;
+      if (!job.cancelled && next < n) { try { sched(); } catch (e) { log('TX 합성 오류: ' + e); job.cancelled = true; } }
+      if (next >= n || job.cancelled) { if (job.srcs.every(e => e.ended)) fin(); }
+    };
+    try { sched(); if (next < n) sched(); } catch (e) { log('TX 오류: ' + e); fin(); return; }
+    wd = setInterval(() => { if (ctx.currentTime > tNext + 2 || (job.cancelled && ctx.currentTime > job.cancelAt + 0.6)) fin(); }, 500);
+    const anim = () => {
+      if (finished) return;
+      const now = ctx.currentTime, el = Math.max(0, now - tBegin), p2 = Math.min(el / totalDur, 1);
+      const cur = job.srcs.find(e => now >= e.t0 && now < e.t1);
+      ui.prog(p2);
+      ui.status(job.cancelled ? '취소 중...' : n > 1 ? `전송 ${segLabel ? segLabel(cur ? cur.k : Math.min(next, n - 1)) : ''} · ${(p2 * 100) | 0}% · 남은 ${fmtT(Math.max(0, totalDur - el))}` : `전송${(p2 * 100) | 0}%`);
+      if (fitCanvas(cv)) drawTxViz(cx, cv.width, cv.height, cur, cur ? Math.floor((now - cur.t0) * sr) : -1, sr);
+      requestAnimationFrame(anim);
+    };
+    requestAnimationFrame(anim);
+  });
+}
+/* 캔버스를 실제 표시 크기 × 화면 배율에 맞춘다 (숨겨진 탭이면 false) */
+function fitCanvas(cv) {
+  const dpr = Math.min(2, window.devicePixelRatio || 1), w = Math.round(cv.clientWidth * dpr), h = Math.round(cv.clientHeight * dpr);
+  if (!w || !h) return false;
+  if (cv.width !== w || cv.height !== h) { cv.width = w; cv.height = h; }
+  return true;
+}
+const GCOL = [[0, 255, 168], [0, 212, 255], [180, 144, 255], [255, 176, 32], [255, 77, 106]];
+/* 송신 그래프: 가로 = 심볼(시간), 세로 = 톤(그룹 × 16). 톤방식에 따라 묶음 경계선과 동시 톤 수가 보인다 */
+function drawTxViz(cx, W, H, ent, cs, sr) {
+  cx.fillStyle = '#060a12'; cx.fillRect(0, 0, W, H);
+  const dpr = Math.min(2, window.devicePixelRatio || 1), fs = Math.round(8 * dpr);
+  if (!ent || !ent.viz) { cx.fillStyle = '#4a5a72'; cx.font = `${fs}px monospace`; cx.fillText('준비 중...', 6, fs + 4); return; }
+  const v = ent.viz, G = v.G, rows = G * NT, TM = TONE_MODES[v.mode], M = NT / TM.S, lay = v.lay;
+  const top = Math.round(fs * 1.6), plotH = Math.round(H * 0.72) - top, rowH = plotH / rows, wfTop = top + plotH + 3, wfH = H - wfTop - 2;
+  const span = Math.max(14, Math.round(W / (14 * dpr))), uC = (cs - v.s0) / v.sym, uS = uC - span * 0.7, colW = W / span;
+  const yOf = r => top + plotH - (r + 1) * rowH;
+  /* 그룹·묶음 경계 */
+  for (let g = 0; g < G; g++) {
+    const c = GCOL[g % 5]; cx.fillStyle = `rgba(${c[0]},${c[1]},${c[2]},0.05)`; cx.fillRect(0, yOf(g * NT + NT - 1), W, NT * rowH);
+    for (let q = 1; q < TM.S; q++) { cx.fillStyle = `rgba(${c[0]},${c[1]},${c[2]},0.35)`; cx.fillRect(0, Math.round(yOf(g * NT + q * M - 1) + rowH) , W, 1); }
+    cx.fillStyle = 'rgba(74,90,114,.6)'; cx.fillRect(0, Math.round(yOf(g * NT + NT - 1)), W, 1);
+  }
+  /* 프리앰블: 웨이크업 톤·처프 궤적 */
+  if (uS < 0) {
+    const rOf = f => (f - v.fLo) / (v.fHi - v.fLo) * (rows - 1);
+    cx.fillStyle = '#ffb020';
+    for (let x = 0; x < W; x++) {
+      const u = uS + x / colW; if (u >= 0) break;
+      const n = Math.round(v.s0 + u * v.sym); if (n < v.lead || n > cs) continue;
+      let f = -1;
+      if (n < v.lead + v.Lw) f = (v.f0 + v.f1) / 2;
+      else for (let p = 0; p < CHIRP_PAIRS; p++) {
+        const cu = v.lead + v.Lw + v.Lg + p * 2 * (v.Lc + v.Lg), cd = cu + v.Lc + v.Lg;
+        if (n >= cu && n < cu + v.Lc) f = v.f0 + (v.f1 - v.f0) * (n - cu) / v.Lc;
+        else if (n >= cd && n < cd + v.Lc) f = v.f1 - (v.f1 - v.f0) * (n - cd) / v.Lc;
+      }
+      if (f > 0) cx.fillRect(x, yOf(Math.max(0, Math.min(rows - 1, rOf(f)))), Math.max(2, dpr * 1.5), Math.max(2, rowH));
+    }
+  }
+  /* 심볼별 켜진 톤 */
+  const cur = Math.floor(uC), kHdr = TRAIN_SYMS + PROBE_SYMS, kDat = kHdr + lay.hdrSyms, kTail = kDat + lay.dataSyms;
+  for (let si = Math.max(0, Math.floor(uS)); si < Math.min(v.tones.length, uS + span + 1); si++) {
+    const ix = v.tones[si]; if (!ix) continue;
+    const x = (si - uS) * colW, a = si < cur ? 0.5 : si === cur ? 1 : 0.15;
+    for (const t of ix) {
+      const g = (t / NT) | 0, c = si < TRAIN_SYMS ? [150, 160, 180] : si < kDat ? [255, 176, 32] : si >= kTail ? [110, 120, 140] : GCOL[g % 5];
+      cx.fillStyle = `rgba(${c[0]},${c[1]},${c[2]},${si < TRAIN_SYMS ? a * 0.6 : a})`;
+      cx.fillRect(x + 1, yOf(t), Math.max(1, colW - 2), Math.max(1.5, rowH - 0.4));
+    }
+  }
+  const px = (uC - uS) * colW; cx.fillStyle = 'rgba(242,246,255,.5)'; cx.fillRect(px, top, Math.max(1, dpr), plotH);
+  /* 이름표 */
+  const kind = uC < 0 ? 'SYNC 처프' : cur < TRAIN_SYMS ? '학습(짝/홀 톤)' : cur < kHdr ? '무음 프로브' : cur < kDat ? 'HDR(길이·방식)' : cur < kTail ? 'DATA' : 'TAIL';
+  cx.font = `${fs}px monospace`; cx.fillStyle = '#00ffa8';
+  cx.fillText(`${kind} · ${TM.name} = 그룹마다 ${TM.S}톤 동시 (${M}톤 중 1 × ${TM.S}) · ${G}그룹`, 4, fs + 1);
+  /* 파형 띠 */
+  if (ent.samples && wfH > 6 && cs >= 0) {
+    const win = Math.round(sr * 0.06); cx.beginPath();
+    for (let x = 0; x < W; x++) { const s2 = cs - win / 2 + Math.floor(x * win / W), y = wfTop + wfH / 2 - ((s2 >= 0 && s2 < ent.samples.length) ? ent.samples[s2] : 0) * wfH * 0.5; x ? cx.lineTo(x, y) : cx.moveTo(x, y); }
+    cx.strokeStyle = 'rgba(0,255,168,.7)'; cx.lineWidth = dpr; cx.stroke();
+  }
+}
+function txUi(kind, on) {
+  const isT = kind === 'text', b = $(isT ? 'txBtn' : 'ftxBtn'), o = $(isT ? 'ftxBtn' : 'txBtn');
+  b.textContent = on ? '■ 취소' : (isT ? '▶ 전송' : '▶ 파일 전송');
+  b.className = 'btn ' + (on ? 'bst' : 'bt');
+  $(isT ? 'txD' : 'ftxD').classList.toggle('on', on);
+  o.disabled = on ? true : (isT ? !fData : false);
+}
+async function doTx(kind) {
+  if (txBusy) { cancelTx(); return; }
+  if (envBusy) return;
+  if (kind === 'file' && !fData) return;
+  if (kind === 'text' && !$('txIn').value) return;
+  {
+    const st = m => $(kind === 'text' ? 'txS' : 'ftxS').textContent = m, b = $(kind === 'text' ? 'txBtn' : 'ftxBtn');
+    b.disabled = true; try { await autoEnvBeforeTx(st); } finally { b.disabled = false; }
+  }
+  let pkts, ui, segLabel = null;
+  if (kind === 'text') {
+    const text = $('txIn').value; if (!text) return;
+    const enc = encodeTextBest(text), pkt = buildPkt(enc.type, enc.data, '');
+    if (rsEncodedLen(pkt.length, C.rsT) > MAX_FRAME_BYTES) { $('txS').textContent = '너무 깁니다 — 파일 탭에서 .txt 로 보내세요'; return; }
+    pkts = [pkt];
+    ui = { cid: 'txC', prog: p => $('txPg').style.width = (p * 100) + '%', status: m => $('txS').textContent = m };
+  } else {
+    if (!fData) return;
+    const plan = filePlan();
+    if (!plan.list.length) { $('ftxS').textContent = '보낼 세그먼트가 없습니다'; return; }
+    if (plan.secs > 600 && !confirm(`예상 전송 시간 ${fmtT(plan.secs)} — 계속할까요?\n(더 빠르게: 톤방식 듀얼/쿼드, 속도 빠름)`)) return;
+    pkts = plan.list.map(i => segPkt(i, plan.seg, plan.n));
+    segLabel = k => `세그 ${plan.list[k] + 1}/${plan.n}${plan.reps > 1 ? ` (${Math.floor(k / plan.uniq) + 1}/${plan.reps}회차)` : ''}`;
+    ui = { cid: 'ftxC', prog: p => $('ftxPg').style.width = (p * 100) + '%', status: m => $('ftxS').textContent = m };
+  }
+  txUi(kind, true);
+  try { await transmitFrames(pkts, ui, segLabel); }
+  catch (e) { log('TX 오류: ' + e); ui.status('전송 실패'); txBusy = false; txCur = null; resumeAllRx(); }
+  txUi(kind, false);
+}
+
+/*── 송신 전 환경 측정 ──
+  마이크를 잠깐 열고: 0.7초 조용히 듣기 → 대역별 DOWN 처프 1개씩 재생·녹음 → envAnalyze → envDecide */
+let envLast = null, envBusy = false;
+/* 마이크 녹음: ready = 첫 샘플 도착(이때부터 녹음 중), done = 녹음 결과 */
+function captureMic(ctx, secs) {
+  let onReady, onDone, onErr; const ready = new Promise((r, j) => { onReady = r; onErr = j; }), done = new Promise(r => { onDone = r; });
+  (async () => {
+    let stream; try { stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } }); } catch (e) { onErr(e); return; }
+    const src = ctx.createMediaStreamSource(stream), chunks = []; let got = 0, node, fin = false;
+    const need = Math.round(secs * ctx.sampleRate);
+    const finish = () => { if (fin) return; fin = true; try { src.disconnect(); node.disconnect(); } catch (e) { } stream.getTracks().forEach(t => t.stop()); const out = new Float32Array(got); let o = 0; for (const c of chunks) { out.set(c, o); o += c.length; } onDone(out); };
+    const onData = c => { if (fin) return; if (!got) { onReady(); setTimeout(finish, secs * 1000 + 1500); } chunks.push(c); got += c.length; if (got >= need) finish(); };
+    if (await ensureWorklet(ctx)) { node = new AudioWorkletNode(ctx, 'sl-cap'); node.port.onmessage = e => onData(e.data); }
+    else { node = ctx.createScriptProcessor(2048, 1, 1); node.onaudioprocess = e => { const c = new Float32Array(e.inputBuffer.length); c.set(e.inputBuffer.getChannelData(0)); onData(c); e.outputBuffer.getChannelData(0).fill(0); }; }
+    src.connect(node); node.connect(ctx.destination);
+    setTimeout(() => { if (!got) { finish(); onErr(new Error('마이크 입력 없음')); } }, 4000);
+  })();
+  return { ready, done };
+}
+async function measureEnv(status) {
+  if (envBusy) return null;
+  const ctx = getCtx(), sr = ctx.sampleRate;
+  if (!await ensMic()) { status('마이크 권한이 없어 측정 생략'); return null; }
+  envBusy = true; pauseAllRx();
+  try {
+    status('📏 주변 소음 듣는 중... (조용히)');
+    const pr = envProbeSignal(sr, C.vol), secs = pr.samples.length / sr + 0.55;
+    const cap = captureMic(ctx, secs);
+    await cap.ready; await new Promise(r => setTimeout(r, 100));
+    const b = ctx.createBuffer(1, pr.samples.length, sr); b.getChannelData(0).set(pr.samples);
+    const s2 = ctx.createBufferSource(); s2.buffer = b; s2.connect(ctx.destination); s2.start();
+    setTimeout(() => status('📏 반사음(잔향) 측정 중...'), ENV.NOISE_SEC * 1000);
+    const rec = await cap.done;
+    const r = envAnalyze(rec, sr);
+    envLast = { t: Date.now(), r };
+    const f = k => { const e = r[k]; return `${BANDS[k].label} 소음 ${e.noiseDb.toFixed(0)}dBFS·여유 ${e.marginDb.toFixed(0)}dB${e.rt60 > 0 ? `·RT ${(e.rt60 * 1000).toFixed(0)}ms` : ''}${e.peaks.length ? `·간섭 ${e.peaks.length}` : ''}${e.found ? '' : '·처프 안 들림'}`; };
+    log(`ENV: ${f('mid')} | ${f('ultra')}`);
+    return r;
+  } catch (e) { log('측정 오류: ' + e); status('측정 실패 → 현재 설정으로 진행'); return null; }
+  finally { envBusy = false; setTimeout(() => { if (!txBusy) resumeAllRx(); }, 150); }
+}
+function applyEnv(r, scope) {
+  const d = envDecide(r, { ...C }, scope === 'off' ? 'mode' : scope), c = d.cfg;
+  $('selMode').value = c.band; $('selSpd').value = c.spd; $('selDT').value = String(c.mode); $('selRS').value = String(c.rsT); $('selVol').value = String(c.vol);
+  cfgChg();
+  $('cfgEnv').textContent = `📏 ${new Date().toLocaleTimeString('ko', { hour12: false })} 측정 → ${BANDS[c.band].label}·${SPD[c.spd].label}·${TONE_MODES[c.mode].name}·RS${c.rsT} | ${d.why.join(' · ')} (송신 기기 주변 기준)`;
+  log('ENV 적용: ' + d.why.join(' / '));
+  return d;
+}
+async function envButton() {
+  const st = m => $('cfgEnv').textContent = m;
+  if (txBusy) return;
+  const r = await measureEnv(st); if (r) applyEnv(r, $('selEnv').value);
+}
+async function autoEnvBeforeTx(status) {
+  const sc = $('selEnv').value; if (sc === 'off') return;
+  const r = (envLast && Date.now() - envLast.t < 30000) ? envLast.r : await measureEnv(status);
+  if (r) applyEnv(r, sc);
+}
+
+/*── 파일 TX: 압축 → 세그먼트 → 세그먼트마다 독립 프레임 ──
+  세그 본문 = [파일ID 2][번호 2][총수 2][원본크기 4][CRC32 4][본문크기 4][플래그 1: bit0=무압축] + 조각 (파일명은 패킷 이름 필드) */
+let fData = null, fName2 = '', fComp = null, fCrc = 0, fId = 0, fRaw = false;
+function u32(a, o) { return ((a[o] << 24) | (a[o + 1] << 16) | (a[o + 2] << 8) | a[o + 3]) >>> 0; }
+function putU32(a, o, v) { a[o] = (v >>> 24) & 255; a[o + 1] = (v >>> 16) & 255; a[o + 2] = (v >>> 8) & 255; a[o + 3] = v & 255; }
+function segPkt(i, seg, n) {
+  const part = fComp.subarray(i * seg, Math.min((i + 1) * seg, fComp.length));
+  const b = new Uint8Array(SEG_HDR + part.length);
+  b[0] = fId >> 8; b[1] = fId & 255; b[2] = i >> 8; b[3] = i & 255; b[4] = n >> 8; b[5] = n & 255;
+  putU32(b, 6, fData.length); putU32(b, 10, fCrc); putU32(b, 14, fComp.length); b[18] = fRaw ? 1 : 0; b.set(part, SEG_HDR);
+  return buildPkt(PKT_SEG, b, fName2);
+}
+/* "3,7-9" (1부터) → [2,6,7,8] */
+function parseSel(str, n) {
+  const out = new Set();
+  for (const tok of str.split(/[\s,;]+/)) {
+    if (!tok) continue;
+    const m = tok.match(/^(\d+)(?:-(\d+))?$/); if (!m) continue;
+    let a = +m[1], b = m[2] ? +m[2] : a; if (a > b) [a, b] = [b, a];
+    for (let i = Math.max(1, a); i <= Math.min(n, b); i++) out.add(i - 1);
+  }
+  return [...out].sort((x, y) => x - y);
+}
+function filePlan() {
+  const seg = +$('selSeg').value, n = Math.max(1, Math.ceil(fComp.length / seg)), reps = +$('selRep').value;
+  const s = $('segSel').value.trim(), sel = s ? parseSel(s, n) : [...Array(n).keys()];
+  const list = []; for (let r = 0; r < reps; r++) list.push(...sel);
+  const nameLen = nameBytes(fName2).length;
+  let secs = 0; for (const i of list) { const len = Math.min(seg, fComp.length - i * seg); secs += frameSecs(rsEncodedLen(4 + nameLen + SEG_HDR + len, C.rsT)) + SEG_GAP; }
+  return { seg, n, reps, list, uniq: sel.length, secs };
+}
+function updFileStats() {
+  if (!fData) return;
+  const p = filePlan();
+  $('s_fn').textContent = p.n; $('s_fc').textContent = p.list.length; $('s_fe').textContent = fmtT(p.secs);
+}
+function onFile(e) {
+  const f = e.target.files[0]; if (!f) return;
+  if (f.size > MAX_FILE) { alert(`최대 ${fmtSz(MAX_FILE)} 까지 지원합니다`); return; }
+  if (!f.size) { alert('빈 파일입니다'); return; }
+  const r = new FileReader();
+  r.onload = ev => {
+    fData = new Uint8Array(ev.target.result); fName2 = f.name;
+    fComp = compress(fData); fRaw = fComp.length >= fData.length;
+    if (fRaw) { log(`압축 효과 없음 → 원본 그대로 전송 (${fmtSz(fData.length)})`); fComp = fData; }
+    fCrc = crc32(fData); fId = ((fCrc >>> 16) ^ fCrc ^ fData.length) & 0xFFFF;
+    $('fI').style.display = 'block'; $('fN').textContent = f.name; $('fSz').textContent = ' ' + fmtSz(fData.length);
+    $('s_fo').textContent = fmtSz(fData.length); $('s_fz').textContent = fRaw ? '무압축' : fmtSz(fComp.length);
+    $('segSel').value = '';
+    if (!txBusy) $('ftxBtn').disabled = false;
+    updFileStats(); $('ftxS').textContent = '준비';
+  };
+  r.readAsArrayBuffer(f);
+}
+const dz = $('fDrop'); dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('dv'); }); dz.addEventListener('dragleave', () => dz.classList.remove('dv')); dz.addEventListener('drop', e => { e.preventDefault(); dz.classList.remove('dv'); const f = e.dataTransfer.files[0]; if (f) onFile({ target: { files: [f] } }); });
+
+/*── 파일 RX: 세그먼트 모으기 (같은 파일을 다시 보내면 빠진 것만 채워진다) ──*/
+const fStore = new Map();
+function rangesStr(idxs) {
+  const out = []; let i = 0;
+  while (i < idxs.length) { let j = i; while (j + 1 < idxs.length && idxs[j + 1] === idxs[j] + 1) j++; out.push(i === j ? `${idxs[i] + 1}` : `${idxs[i] + 1}-${idxs[j] + 1}`); i = j + 1; }
+  return out.join(',');
+}
+function missingOf(st) { const m = []; for (let i = 0; i < st.total; i++) if (!st.segs[i]) m.push(i); return m; }
+function onSeg(pkt) {
+  const d = pkt.data; if (d.length < SEG_HDR) return null;
+  const fid = (d[0] << 8) | d[1], idx = (d[2] << 8) | d[3], total = (d[4] << 8) | d[5], size = u32(d, 6), crc = u32(d, 10), csz = u32(d, 14), raw = !!(d[18] & 1);
+  if (!total || idx >= total) return null;
+  const key = `${fid}:${crc}:${size}`;
+  let st = fStore.get(key);
+  if (!st) { st = { key, name: pkt.name || 'file', total, size, crc, csz, raw, segs: new Array(total).fill(null), got: 0, el: null, blob: null, bad: false, t0: Date.now() }; fStore.set(key, st); log(`파일 수신 시작: ${st.name} ${fmtSz(size)} / ${total}세그`); }
+  const isNew = !st.segs[idx];
+  if (isNew) { st.segs[idx] = d.slice(SEG_HDR); st.got++; }
+  if (st.got === st.total && !st.blob) assembleFile(st);
+  renderFile(st);
+  return { st, idx, isNew };
+}
+function assembleFile(st) {
+  const comp = new Uint8Array(st.segs.reduce((a, s) => a + s.length, 0)); let o = 0;
+  for (const s of st.segs) { comp.set(s, o); o += s.length; }
+  let out = null; try { out = st.raw ? comp : decompress(comp); } catch (e) { }
+  if (out && out.length === st.size && crc32(out) === st.crc) { st.blob = new Blob([out]); st.bad = false; log(`파일 완료 ✓ ${st.name} CRC32 일치`); }
+  else { st.bad = true; log(`파일 조립 실패: ${st.name} (크기 ${out ? out.length : '?'} / CRC32 불일치)`); }
+}
+function saveFile(st) { if (!st.blob) return; const u = URL.createObjectURL(st.blob), a = document.createElement('a'); a.href = u; a.download = st.name; document.body.appendChild(a); a.click(); document.body.removeChild(a); setTimeout(() => URL.revokeObjectURL(u), 2000); }
+function renderFile(st) {
+  const lg = $('frxLog'); const em = lg.querySelector('.rx-empty'); if (em) em.remove();
+  if (!st.el) {
+    st.el = document.createElement('div');
+    st.el.innerHTML = `<span class="t"></span><span class="v"></span><div class="fb"><i></i></div><span class="m"></span><div class="acts"><button class="cp">📋 누락 목록 복사</button><button class="sv" style="display:none">💾 저장</button></div>`;
+    st.el.querySelector('.cp').onclick = () => { const s = rangesStr(missingOf(st)); if (navigator.clipboard) navigator.clipboard.writeText(s).then(() => log('누락 목록 복사: ' + s), () => prompt('누락 목록', s)); else prompt('누락 목록', s); };
+    st.el.querySelector('.sv').onclick = () => saveFile(st);
+    lg.appendChild(st.el);
+  }
+  const miss = missingOf(st), el = st.el, done = !!st.blob;
+  el.className = 'rx-e ' + (done ? 'ok' : st.bad ? 'fail' : 'prog');
+  el.querySelector('.t').textContent = new Date().toLocaleTimeString('ko', { hour12: false });
+  el.querySelector('.v').textContent = (done ? '✅ ' : st.bad ? '⚠ ' : '📥 ') + `${st.name} (${fmtSz(st.size)})`;
+  el.querySelector('.fb i').style.width = (st.got / st.total * 100) + '%';
+  el.querySelector('.m').textContent = done ? `${st.total}세그 완료 · CRC32✓ · ${fmtT((Date.now() - st.t0) / 1000)}` :
+    st.bad ? `세그 모두 받았지만 조립 검증 실패 → 송신 측에서 전체 재전송` :
+    `세그 ${st.got}/${st.total} · 누락 ${miss.length}개: ${rangesStr(miss.slice(0, 60))}${miss.length > 60 ? ' …' : ''}`;
+  el.querySelector('.cp').style.display = done || !miss.length ? 'none' : '';
+  el.querySelector('.sv').style.display = done ? '' : 'none';
+  lg.scrollTop = lg.scrollHeight;
+}
+
+/*── RX: AudioWorklet(폴백 ScriptProcessor) → 복조기 6개(대역 2 × 속도 3) 병렬 = 자동 인식 ──*/
+const WORKLET_SRC = `class Cap extends AudioWorkletProcessor{process(inputs){const ch=inputs[0]&&inputs[0][0];if(ch){const c=new Float32Array(ch.length);c.set(ch);this.port.postMessage(c,[c.buffer])}return true}}registerProcessor('sl-cap',Cap);`;
+async function ensureWorklet(ctx) {
+  if (workletReady) return true;
+  if (!ctx.audioWorklet) return false;
+  try { const url = URL.createObjectURL(new Blob([WORKLET_SRC], { type: 'application/javascript' })); await ctx.audioWorklet.addModule(url); URL.revokeObjectURL(url); workletReady = true; log('AudioWorklet ready'); return true; }
+  catch (e) { log('Worklet 불가 → ScriptProcessor 폴백: ' + e); return false; }
+}
+class Rx {
+  constructor(ui) { this.ui = ui; this.on = false; this.paused = false; this.stream = null; this.node = null; this.anim = null; this.demods = null; this.active = null; this.lastOk = 0; }
+  pause() { if (!this.on) return; this.paused = true; this.ui.status('송신 중 — 수신 일시정지'); }
+  resume() { if (!this.on) return; this.flushAll(); this.paused = false; this.ui.status('대기중...'); }
+  flushAll() { if (this.demods) for (const d of this.demods) d.flush(); this.active = null; this.ui.prog(0); }
+  async start() {
+    const ctx = getCtx(), sr = ctx.sampleRate;
+    this.stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } });
+    this.on = true;
+    const source = ctx.createMediaStreamSource(this.stream), self = this;
+    this.active = null; this.lastOk = 0;
+    this.demods = [];
+    for (const bk of Object.keys(BANDS)) for (const sk of Object.keys(SPD)) {
+      const id = bk + '/' + sk, lab = `${BANDS[bk].label}·${SPD[sk].label}`, sp = SPD[sk];
+      const act = () => self.active === null || self.active === id;
+      this.demods.push(new Demod({ sr, baud: sp.baud, guard: sp.guard, groups: allocGroups(BANDS[bk].lo, BANDS[bk].hi, sp.spacing), cb: {
+        status: m => { if (m.startsWith('수신') && self.active === null) self.active = id; if (act()) self.ui.status(`[${lab}] ${m}`); },
+        prog: p => { if (act()) self.ui.prog(p); }, bytes: b => { if (act()) self.ui.bytes(b); }, errors: e => { if (act()) self.ui.errors(e); },
+        complete: (pkt, info) => {
+          if (self.active === id) self.active = null;
+          info.label = lab;
+          if (pkt && pkt.crcOk) { self.lastOk = Date.now(); self.ui.complete(pkt, info); }
+          else { const t = Date.now(); setTimeout(() => { if (self.on && Math.abs(self.lastOk - t) > 3000) self.ui.complete(pkt, info); }, 1500); }
+        },
+        log: m => { if (m.startsWith('reset') && self.active === id) self.active = null; log(`RX[${lab}]: ` + m); }
+      } }));
+    }
+    const vr = this.vring = new Float32Array(1 << 14); this.vw = 0;
+    const feed = buf => {
+      if (!self.on) return;
+      for (let i = 0; i < buf.length; i++) vr[(self.vw + i) & (vr.length - 1)] = buf[i];
+      self.vw += buf.length;
+      if (!self.paused && self.demods) for (const d of self.demods) d.push(buf);
+    };
+    if (await ensureWorklet(ctx)) {
+      this.node = new AudioWorkletNode(ctx, 'sl-cap'); this.node.port.onmessage = e => feed(e.data);
+      source.connect(this.node); this.node.connect(ctx.destination); this.mode = 'worklet';
+    } else {
+      const proc = ctx.createScriptProcessor(2048, 1, 1);
+      proc.onaudioprocess = e => { const inp = e.inputBuffer.getChannelData(0), c = new Float32Array(inp.length); c.set(inp); feed(c); const out = e.outputBuffer.getChannelData(0); for (let j = 0; j < out.length; j++) out[j] = 0; };
+      source.connect(proc); proc.connect(ctx.destination); this.node = proc; this.mode = 'sp';
+    }
+    this.startViz(sr);
+    log(`RX start [${this.mode}] SR=${sr} 복조기 ${this.demods.length}개 (대역·속도·톤방식·RS 자동 인식)`);
+  }
+  /* 스펙트럼 폭포: 마이크 샘플로 직접 FFT (AnalyserNode 미지원·미동작 기기 대비)
+     · 밝기는 화면의 소음 바닥을 따라가며 자동 조정 → 작은 신호도 보인다
+     · 캔버스 크기는 매 프레임 실제 표시 크기에 맞춘다 (탭 전환·회전·PC/모바일) */
+  startViz(sr) {
+    const cv = $(this.ui.cid), cx = cv.getContext('2d'), N = 4096, re = new Float64Array(N), im = new Float64Array(N), hw = new Float64Array(N);
+    for (let i = 0; i < N; i++) hw[i] = 0.5 - 0.5 * Math.cos(2 * Math.PI * i / N);
+    const FLO = 5000, FHI = 16500, binHz = sr / N, ref = 10 * Math.log10((N / 4) * (N / 4));
+    const allG = [...allocGroups(BANDS.mid.lo, BANDS.mid.hi, 46.875), ...allocGroups(BANDS.ultra.lo, BANDS.ultra.hi, 46.875)];
+    let W = 0, H = 0, off = null, ox = null, col = 0, rowsK = null, rowsC = null, img = null, fl = null, last = 0;
+    const STEP = 2;
+    const frame = ts => {
+      if (!this.on) return;
+      this.anim = requestAnimationFrame(frame);
+      if (ts - last < 30 || document.hidden) return; last = ts;
+      const dpr = Math.min(2, window.devicePixelRatio || 1), cw = Math.round(cv.clientWidth * dpr), ch = Math.round(cv.clientHeight * dpr);
+      if (!cw || !ch) return;
+      if (cw !== W || ch !== H) {
+        W = cw; H = ch; cv.width = W; cv.height = H;
+        off = document.createElement('canvas'); off.width = W; off.height = H; ox = off.getContext('2d'); ox.fillStyle = '#060a12'; ox.fillRect(0, 0, W, H); col = 0;
+        rowsK = new Int32Array(H * 2); rowsC = [];
+        for (let y = 0; y < H; y++) {
+          const fA = FHI - (FHI - FLO) * y / H, fB = FHI - (FHI - FLO) * (y + 1) / H;
+          rowsK[y * 2] = Math.max(1, Math.floor(fB / binHz)); rowsK[y * 2 + 1] = Math.max(rowsK[y * 2], Math.ceil(fA / binHz));
+          const fm = (fA + fB) / 2; let c = null; for (let g = 0; g < allG.length; g++) if (fm >= allG[g].tones[0] - 25 && fm <= allG[g].tones[15] + 25) { c = GCOL[(g < 3 ? g : g - 3) % 5]; break; }
+          rowsC.push(c);
+        }
+        img = ox.createImageData(STEP, H);
+      }
+      const vr = this.vring, m = vr.length - 1, w0 = this.vw - N;
+      for (let i = 0; i < N; i++) { re[i] = vr[(w0 + i) & m] * hw[i]; im[i] = 0; }
+      fftIP(re, im, false);
+      const rv = new Float32Array(H);
+      for (let y = 0; y < H; y++) { let mx = 0; for (let k = rowsK[y * 2]; k <= rowsK[y * 2 + 1]; k++) { const p = re[k] * re[k] + im[k] * im[k]; if (p > mx) mx = p; } rv[y] = 10 * Math.log10(mx + 1e-20) - ref; }
+      const srt = Array.from(rv).sort((a, b) => a - b), p30 = srt[(H * 0.3) | 0], pmx = srt[H - 1];
+      if (fl === null) fl = p30; else fl += (p30 - fl) * (p30 < fl ? 0.3 : 0.05);
+      const d = img.data;
+      for (let y = 0; y < H; y++) {
+        const v = Math.pow(Math.max(0, Math.min(1, (rv[y] - fl - 3) / 34)), 0.8), c = rowsC[y] || [90, 110, 140], base = rowsC[y] ? 14 : 6;
+        for (let x = 0; x < STEP; x++) { const o = (y * STEP + x) * 4; d[o] = base + v * c[0]; d[o + 1] = base + 2 + v * c[1]; d[o + 2] = base + 8 + v * c[2]; d[o + 3] = 255; }
+      }
+      ox.putImageData(img, col, 0); col = (col + STEP) % W;
+      cx.drawImage(off, col, 0, W - col, H, 0, 0, W - col, H);
+      if (col) cx.drawImage(off, 0, 0, col, H, W - col, 0, col, H);
+      /* 눈금·대역 표시 */
+      const fs = Math.round(7 * dpr); cx.font = `${fs}px monospace`;
+      const yF = f => (FHI - f) / (FHI - FLO) * H;
+      for (const [bk, b] of Object.entries(BANDS)) { const y1 = yF(b.hi), y2 = yF(b.lo); cx.fillStyle = bk === 'mid' ? 'rgba(0,255,168,.7)' : 'rgba(180,144,255,.8)'; cx.fillRect(0, y1, Math.max(2, dpr * 2), y2 - y1); }
+      cx.fillStyle = 'rgba(201,209,217,.75)';
+      for (const f of [6000, 8000, 12000, 14000, 16000]) cx.fillText((f / 1000) + 'k', 4 * dpr, Math.min(H - 2, Math.max(fs, yF(f) + fs / 3)));
+      cx.fillStyle = this.paused ? 'rgba(255,176,32,.9)' : 'rgba(0,212,255,.85)';
+      const t = `${this.paused ? '송신 중 · ' : ''}바닥 ${fl.toFixed(0)}dBFS · 최대 ${pmx.toFixed(0)}`; cx.fillText(t, W - cx.measureText(t).width - 4 * dpr, fs + 1);
+    };
+    this.anim = requestAnimationFrame(frame);
+  }
+  stop() { this.on = false; this.paused = false; if (this.stream) { this.stream.getTracks().forEach(t => t.stop()); this.stream = null; } if (this.node) { try { this.node.disconnect(); } catch (e) { } this.node = null; } if (this.anim) { cancelAnimationFrame(this.anim); this.anim = null; } this.demods = null; }
+}
+
+/*── RX UI 배선 ──*/
+function addE(lid, text, ok, meta) { const lg = $(lid), em = lg.querySelector('.rx-empty'); if (em) em.remove(); const e = document.createElement('div'); e.className = 'rx-e ' + (ok ? 'ok' : 'fail'); e.innerHTML = `<span class="t">${new Date().toLocaleTimeString('ko', { hour12: false })}</span><span class="v"></span><span class="m"></span>`; e.querySelector('.v').textContent = text; e.querySelector('.m').textContent = meta; lg.appendChild(e); lg.scrollTop = lg.scrollHeight; }
+let rxI = { text: null, file: null }, rxPend = { text: false, file: false };
+function resetRx(k) { const p = k === 'text' ? '' : 'f'; $(p + 'rxBtn').textContent = '● 수신'; $(p + 'rxBtn').className = 'btn brc'; $(p + 'rxBtn').disabled = false; $(p + 'rxD').classList.remove('onr'); $(p + 'rxS').textContent = '대기'; $(p + 'rxPg').style.width = '0%'; }
+/* ↺ 초기화: 기록·통계·모은 세그먼트를 지우고, 수신 중이면 진행 중인 프레임도 버리고 새로 탐색 */
+function resetRxPanel(k) {
+  const p = k === 'text' ? '' : 'f';
+  $(k === 'text' ? 'rxLog' : 'frxLog').innerHTML = '<div class="rx-empty">—</div>';
+  if (k === 'text') { cnt.ok = 0; cnt.fail = 0; for (const id of ['s_rb', 's_rf', 's_re', 's_rn', 's_rx']) $(id).textContent = 0; }
+  else { cnt.segFail = 0; fStore.clear(); for (const id of ['s_fb', 's_ff', 's_fe2', 's_fx']) $(id).textContent = 0; }
+  $(p + 'rxPg').style.width = '0%';
+  const rx = rxI[k];
+  if (rx) { rx.flushAll(); $(p + 'rxS').textContent = rx.paused ? '송신 중 — 수신 일시정지' : '대기중... (초기화됨)'; }
+  else $(p + 'rxS').textContent = '대기 (초기화됨)';
+  log(`RX ${k === 'text' ? '텍스트' : '파일'} 초기화`);
+}
+function decText(pkt) { return pkt.type === PKT_KO ? koDec(decompress(pkt.data)) : new TextDecoder().decode(decompress(pkt.data)); }
+function metaOf(info, extra) { const ri = info.corrected > 0 ? `RS복구${info.corrected}` : info.corrected < 0 ? 'RS실패' : 'RS정상'; return `${extra ? extra + ' ' : ''}불확실=${info.lowConf} ${ri} [${info.label}·${TONE_MODES[info.mode].name}·t=${info.rsT}]`; }
+function handleFilePkt(pkt, info, k) {
+  if (pkt.type === PKT_SEG) {
+    if (!pkt.crcOk) { cnt.segFail++; $('s_fx').textContent = cnt.segFail; $('frxS').textContent = '세그먼트 CRC 오류 → 누락으로 남김'; return; }
+    const r = onSeg(pkt); if (!r) return;
+    $('s_ff').textContent = Math.max(0, info.corrected);
+    const msg = `세그 ${r.idx + 1}/${r.st.total} ${r.isNew ? '✓' : '(중복)'} · ${r.st.got}/${r.st.total}`;
+    $('frxS').textContent = r.st.blob ? `✅ ${r.st.name} 완료` : msg;
+    if (k === 'text') $('rxS').textContent = `📁 ${msg} → 파일 탭`;
+    log(`SEG ${r.st.name} ${msg} ${metaOf(info)}`);
+  } else if (pkt.type === PKT_FILE1) {
+    if (!pkt.crcOk) { cnt.segFail++; $('s_fx').textContent = cnt.segFail; return; }
+    const fd = decompress(pkt.data), st = { key: 'v1:' + Date.now(), name: pkt.name || 'file', total: 1, size: fd.length, crc: crc32(fd), segs: [pkt.data], got: 1, el: null, blob: new Blob([fd]), bad: false, t0: Date.now() };
+    fStore.set(st.key, st); renderFile(st);
+  }
+}
+async function togRx(k) {
+  const p = k === 'text' ? '' : 'f', btn = p + 'rxBtn', dot = p + 'rxD', stat = p + 'rxS', lid = k === 'text' ? 'rxLog' : 'frxLog';
+  if (rxI[k]) { rxI[k].stop(); rxI[k] = null; resetRx(k); return; }
+  if (rxPend[k]) return;
+  const o = k === 'text' ? 'file' : 'text';
+  if (rxI[o]) { rxI[o].stop(); rxI[o] = null; resetRx(o); $((o === 'text' ? '' : 'f') + 'rxS').textContent = `${k === 'text' ? '텍스트' : '파일'} 탭에서 수신 시작 → 여기는 중지됨`; log(`수신 전환: ${o} → ${k}`); }
+  rxPend[k] = true;
+  try {
+    if (!await ensMic()) return;
+    $(btn).textContent = '■ 중지'; $(btn).className = 'btn bst'; $(dot).classList.add('onr'); $(stat).textContent = '대기중...'; $(p + 'rxPg').style.width = '0%';
+    const rx = new Rx({ cid: k === 'text' ? 'rxC' : 'frxC', status: m => $(stat).textContent = m, prog: p2 => $(p + 'rxPg').style.width = (p2 * 100) + '%',
+      bytes: b => $(k === 'text' ? 's_rb' : 's_fb').textContent = b, errors: e => $(k === 'text' ? 's_re' : 's_fe2').textContent = e,
+      complete: (pkt, info) => {
+        if (k === 'text') $('s_rf').textContent = Math.max(0, info.corrected);
+        if (!pkt) {
+          if (k === 'text') { cnt.fail++; $('s_rx').textContent = cnt.fail; addE(lid, '⚠ 복호 실패', false, metaOf(info)); }
+          else { cnt.segFail++; $('s_fx').textContent = cnt.segFail; $(stat).textContent = '프레임 복호 실패 (세그먼트면 누락으로 남음)'; }
+          return;
+        }
+        if (pkt.type === PKT_SEG || pkt.type === PKT_FILE1) { handleFilePkt(pkt, info, k); return; }
+        if (pkt.crcOk) {
+          const dec = decText(pkt); addE(lid, dec, true, metaOf(info, `${new TextEncoder().encode(dec).length}B CRC✓`));
+          if (k === 'text') { cnt.ok++; $('s_rn').textContent = cnt.ok; }
+          $(stat).textContent = '완료✓'; log(`RX OK: "${dec.slice(0, 60)}"`);
+        } else {
+          let dt = '?'; try { dt = decText(pkt); } catch (e) { }
+          if (k === 'text') { cnt.fail++; $('s_rx').textContent = cnt.fail; }
+          addE(lid, dt + '\n⚠CRC불일치', false, metaOf(info));
+        }
+      }
+    });
+    try { await rx.start(); rxI[k] = rx; if (txBusy) rx.pause(); }
+    catch (e) { log('mic err: ' + e); rx.stop(); resetRx(k); $(stat).textContent = '마이크실패'; }
+  } finally { rxPend[k] = false; }
+}
+
+/*── 마이크 권한 ──*/
+let micRes = null; function showMic() { $('micO').classList.add('show'); return new Promise(r => { micRes = r; }); } function closeMic() { $('micO').classList.remove('show'); if (micRes) { micRes(false); micRes = null; } }
+async function reqMic() { $('micO').classList.remove('show'); try { const s = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } }); s.getTracks().forEach(t => t.stop()); if (micRes) { micRes(true); micRes = null; } } catch (e) { alert('마이크 거부'); if (micRes) { micRes(false); micRes = null; } } }
+async function ensMic() { try { const p = await navigator.permissions.query({ name: 'microphone' }); if (p.state === 'granted') return true; } catch (e) { } return await showMic(); }
+cfgChg();
+</script>
+</body>
+</html>
